@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>788</width>
+    <height>512</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Library Management System</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/* ======== Основне вікно ======== */
+QWidget#centralwidget {
+    background-color: #e8ead2; /* світла частина */
+}
+
+/* Ліва частина */
+QWidget#leftFrame {
+    background-color: #f4f4db;
+}
+
+/* Права частина */
+QWidget#rightFrame {
+    background-color: #a9c3a6;
+}
+
+/* Текст заголовку */
+QLabel {
+    color: #3d4a3f;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* ======== Кнопки ======== */
+QPushButton {
+    background-color: #778873;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+/* Ховер */
+QPushButton:hover {
+    background-color: #444444;
+}
+
+/* Натиснута кнопка */
+QPushButton:pressed {
+    background-color: #1e1e1e;
+}
+
+/* Фокус */
+QPushButton:focus {
+    outline: none;
+    border: 2px solid #6fa06f;
+}
+
+
+</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>811</width>
+      <height>511</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QWidget" name="leftFrame" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <widget class="QLabel" name="label">
+        <property name="geometry">
+         <rect>
+          <x>90</x>
+          <y>20</y>
+          <width>211</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>Comic Sans MS</family>
+          <pointsize>-1</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Welcome to Library</string>
+        </property>
+       </widget>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="rightFrame" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <widget class="QPushButton" name="loginOptionButton">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>150</y>
+          <width>231</width>
+          <height>51</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial Rounded MT</family>
+          <pointsize>-1</pointsize>
+          <fontweight>Medium</fontweight>
+         </font>
+        </property>
+        <property name="text">
+         <string>Log in</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="signupOptionButton">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>270</y>
+          <width>231</width>
+          <height>51</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial Rounded MT</family>
+          <pointsize>-1</pointsize>
+          <fontweight>Medium</fontweight>
+         </font>
+        </property>
+        <property name="text">
+         <string>Sign up</string>
+        </property>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

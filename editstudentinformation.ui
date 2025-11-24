@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EditStudentInformation</class>
+ <widget class="QDialog" name="EditStudentInformation">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1197</width>
+    <height>422</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog {
+    background-color: #f4f1d6;
+    font-size: 16px;
+}
+
+/* ---------- LABELS ---------- */
+QLabel {
+    color: #4a5a3c;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#titleLabel {
+  font-size: 36px;
+}
+
+/* ---------- LINE EDITS ---------- */
+QLineEdit {
+    background: white;
+    border: 2px solid #b7c59a;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 16px;
+    color: #42522b;
+}
+
+QLineEdit:focus {
+    border: 2px solid #8fa673;
+}
+
+/* ---------- BUTTONS (PRIMARY) ---------- */
+QPushButton {
+    background-color: #8fa673;
+    color: white;
+    padding: 6px 20px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background-color: #7c9265;
+}
+
+QPushButton:pressed {
+    background-color: #6b8058;
+}
+
+/* ---------- SECONDARY (LIGHT) BUTTONS ---------- */
+#clearButton, 
+#clearButton_2 {
+    background-color: #d9d1b4;
+    color: #4b4b4b;
+}
+
+#clearButton:hover,
+#clearButton_2:hover {
+    background-color: #c8c0a3;
+}
+
+#clearButton:pressed,
+#clearButton_2:pressed {
+    background-color: #b6ae93;
+}
+
+/* ---------- SAVE CHANGES BUTTON ---------- */
+#saveChangesButton {
+    background-color: #8fa673;
+}
+
+/* ---------- BACK BUTTON ---------- */
+#goBackButton {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: #4a5a3c;
+    padding: 4px 10px;
+}
+
+#goBackButton:hover {
+    color: #7c9265;
+}
+
+#goBackButton:pressed {
+    color: #6b8058;
+}
+
+/* ======== TABLE VIEW ======== */
+QTableView {
+    background-color: #ffffff;
+    border: 2px solid #b5c58b;
+    border-radius: 10px;
+    gridline-color: #b5c58b;
+    color: #42522b;
+    font-size: 14px;
+}
+
+QHeaderView::section {
+    background-color: #d6d7be;
+    color: #3c3c3c;
+    padding: 6px;
+    border: none;
+    font-weight: bold;
+}
+
+/* Scrollbars */
+QScrollBar:vertical {
+    width: 12px;
+    background: #e8e8e8;
+}
+QScrollBar::handle:vertical {
+    background: #b5c58b;
+    border-radius: 6px;
+}
+QScrollBar:horizontal {
+    height: 12px;
+    background: #e8e8e8;
+}
+QScrollBar::handle:horizontal {
+    background: #b5c58b;
+    border-radius: 6px;
+}
+</string>
+  </property>
+  <widget class="QWidget" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>1121</width>
+     <height>401</height>
+    </rect>
+   </property>
+   <widget class="QWidget" name="horizontalLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>10</y>
+      <width>1121</width>
+      <height>391</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QWidget" name="widget_4" native="true">
+         <widget class="QWidget" name="verticalLayoutWidget_2">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>551</width>
+            <height>391</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QPushButton" name="goBackButton">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">#goBackButton {
+    background-color: white;     /* білий фон */
+    color: #333333;              /* темно-сірий текст */
+    border: 1px solid #cccccc;   /* легка сіра рамка */
+    border-radius: 8px;          /* заокруглені кути */
+    padding: 6px 12px;           /* відступи */
+}
+
+#goBackButton:hover {
+    background-color: #f2f2f2;   /* трохи темніший при наведенні */
+}
+
+#goBackButton:pressed {
+    background-color: #e6e6e6;   /* ще темніший при натисканні */
+}</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>icons/left-arrow.png</normaloff>icons/left-arrow.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="titleLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Comic Sans MS</family>
+                 <pointsize>-1</pointsize>
+                 <fontweight>DemiBold</fontweight>
+                </font>
+               </property>
+               <property name="text">
+                <string>Edit students information</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QLineEdit" name="enterNameLineEdit">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>350</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Arial Rounded MT</family>
+                 <pointsize>-1</pointsize>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+               <property name="placeholderText">
+                <string>Enter student`s name</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_3" native="true">
+             <widget class="QWidget" name="horizontalLayoutWidget_3">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>551</width>
+                <height>101</height>
+               </rect>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0,2">
+               <item>
+                <widget class="QLabel" name="label_2">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Arial Rounded MT</family>
+                   <pointsize>-1</pointsize>
+                   <fontweight>DemiBold</fontweight>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Student name</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_6">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="studentNameLineEdit">
+                 <property name="font">
+                  <font>
+                   <family>Arial Rounded MT</family>
+                   <pointsize>-1</pointsize>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_5" native="true">
+             <widget class="QWidget" name="horizontalLayoutWidget_4">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>551</width>
+                <height>71</height>
+               </rect>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,0,2">
+               <item>
+                <widget class="QLabel" name="label_3">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Arial Rounded MT</family>
+                   <pointsize>-1</pointsize>
+                   <fontweight>DemiBold</fontweight>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Student email</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_7">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="studentEmailLineEdit">
+                 <property name="font">
+                  <font>
+                   <family>Arial Rounded MT</family>
+                   <pointsize>-1</pointsize>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_6" native="true">
+             <widget class="QWidget" name="horizontalLayoutWidget_5">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>551</width>
+                <height>61</height>
+               </rect>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="saveButton">
+                 <property name="font">
+                  <font>
+                   <family>Arial Rounded MT</family>
+                   <pointsize>-1</pointsize>
+                   <fontweight>DemiBold</fontweight>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Save changes</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="clearButton">
+                 <property name="font">
+                  <font>
+                   <family>Arial Rounded MT</family>
+                   <pointsize>-1</pointsize>
+                   <fontweight>DemiBold</fontweight>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Clear</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_5">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QWidget" name="widget_2" native="true">
+       <widget class="QTableView" name="studentsTableView">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>551</width>
+          <height>381</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
