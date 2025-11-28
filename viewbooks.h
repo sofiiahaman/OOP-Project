@@ -20,7 +20,8 @@ public:
 
 private slots:
     void on_goBackButton_clicked();
-    void on_refreshButton_clicked();
+    void on_searchButton_clicked();
+    void on_clearButton_clicked();
 
 private:
     Ui::ViewBooks *ui;
