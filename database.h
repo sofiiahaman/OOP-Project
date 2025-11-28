@@ -18,9 +18,12 @@ public:
     int getAuthorsCount();
     int getCategoriesCount();
     int getPublishersCount();
+    int getStudentsCount();
+    int getAvailableBooksCount();
     int getIssuedBooksCount();
     int getReturnedBooksCount();
     int getNotReturnBooksCount();
+
 
     bool userExists(const QString &username);
     bool addUser(const QString &username, const QString &password, const QString &role);

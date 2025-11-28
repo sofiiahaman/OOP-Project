@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>623</width>
+    <width>601</width>
     <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Add students</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QDialog {
@@ -76,18 +76,16 @@ QPushButton:pressed {
     background-color: #b6ae93;
 }
 
-/* Back button (icon-style flat) */
+/* BACK BUTTON */
 #goBackButton_2 {
     background: transparent;
     border: none;
-    font-size: 20px;
-    color: #4a5a3c;
+    color: #42522b;
+    font-size: 16px;
 }
-
-#goBackButton_2:hover {
-    color: #7c9265;
-}
-</string>
+QPushButton#goBackButton_2:hover {
+    background-color: #d7d9c6;
+}</string>
   </property>
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
@@ -144,7 +142,7 @@ QPushButton:pressed {
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">#goBackButton_2 {
+           <string notr="true">#goBackButton {
     background-color: white;     /* білий фон */
     color: #333333;              /* темно-сірий текст */
     border: 1px solid #cccccc;   /* легка сіра рамка */
@@ -152,11 +150,11 @@ QPushButton:pressed {
     padding: 6px 12px;           /* відступи */
 }
 
-#goBackButton_2:hover {
+#goBackButton:hover {
     background-color: #f2f2f2;   /* трохи темніший при наведенні */
 }
 
-#goBackButton_2:pressed {
+#goBackButton:pressed {
     background-color: #e6e6e6;   /* ще темніший при натисканні */
 }</string>
           </property>

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>781</width>
+    <width>782</width>
     <height>592</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Return books</string>
   </property>
   <property name="styleSheet">
    <string notr="true">/* ======== MAIN WINDOW ======== */
@@ -85,14 +85,14 @@ QPushButton:pressed {
 }
 
 /* BACK BUTTON */
-#backButton {
+#goBackButton_5 {
     background: transparent;
     border: none;
     color: #42522b;
     font-size: 16px;
 }
-#backButton:hover {
-    color: #6e8048;
+QPushButton#goBackButton_5:hover {
+    background-color: #d7d9c6;
 }
 
 /* ======== TABLE VIEW ======== */
@@ -702,6 +702,29 @@ QScrollBar::handle:horizontal {
      </item>
     </layout>
    </widget>
+  </widget>
+  <widget class="QPushButton" name="goBackButton">
+   <property name="geometry">
+    <rect>
+     <x>850</x>
+     <y>130</y>
+     <width>60</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/left-arrow.png</normaloff>icons/left-arrow.png</iconset>
+   </property>
   </widget>
  </widget>
  <resources/>

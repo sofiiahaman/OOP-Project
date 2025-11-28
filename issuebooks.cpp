@@ -8,6 +8,86 @@
 #include <QMessageBox>
 #include <QDate>
 #include <QDebug>
+#include <QCompleter>
+
+void IssueBooks::loadStudentHints()
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    if (!db.isOpen()) return;
+
+    QSqlQuery query("SELECT name, email FROM students");
+    QStringList students;
+
+    while (query.next()) {
+        QString name = query.value(0).toString();
+        QString email = query.value(1).toString();
+        students << name;
+
+        studentEmails[name] = email;  // зберігаємо у мапу
+    }
+
+    QCompleter *completer = new QCompleter(students, this);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setFilterMode(Qt::MatchContains);
+    completer->setCompletionMode(QCompleter::PopupCompletion);
+
+    ui->studentNameLineEdit->setCompleter(completer);
+
+    // Коли користувач вибирає підказку — авто-заповнюємо email
+    connect(completer, QOverload<const QString &>::of(&QCompleter::activated),
+            this, &IssueBooks::fillStudentEmail);
+
+    // І коли просто вручну вводить текст
+    connect(ui->studentNameLineEdit, &QLineEdit::textChanged,
+            this, &IssueBooks::fillStudentEmail);
+}
+
+void IssueBooks::fillStudentEmail(const QString &name)
+{
+    if (studentEmails.contains(name)) {
+        ui->studentEmailLineEdit->setText(studentEmails[name]);
+    }
+}
+
+void IssueBooks::loadBookHints()
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    if (!db.isOpen()) return;
+
+    QSqlQuery query("SELECT title, id FROM books");
+    QStringList titles;
+
+    while (query.next()) {
+        QString title = query.value(0).toString();
+        int id = query.value(1).toInt();
+        titles << title;
+
+        bookIds[title] = id;   // зберігаємо в мапу
+    }
+
+    QCompleter *completer = new QCompleter(titles, this);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setFilterMode(Qt::MatchContains);
+    completer->setCompletionMode(QCompleter::PopupCompletion);
+
+    ui->bookNameLineEdit->setCompleter(completer);
+
+    // Якщо вибрано із підказки
+    connect(completer, QOverload<const QString &>::of(&QCompleter::activated),
+            this, &IssueBooks::fillBookId);
+
+    // Якщо вводиться вручну
+    connect(ui->bookNameLineEdit, &QLineEdit::textChanged,
+            this, &IssueBooks::fillBookId);
+}
+
+void IssueBooks::fillBookId(const QString &title)
+{
+    if (bookIds.contains(title)) {
+        ui->bookIdLineEdit->setText(QString::number(bookIds[title]));
+    }
+}
+
 
 IssueBooks::IssueBooks(QWidget *parent) :
     QDialog(parent),
@@ -17,6 +97,9 @@ IssueBooks::IssueBooks(QWidget *parent) :
 
     ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
     ui->goBackButton->setIconSize(QSize(20, 20));
+
+    loadStudentHints();
+    loadBookHints();
 }
 
 IssueBooks::~IssueBooks()

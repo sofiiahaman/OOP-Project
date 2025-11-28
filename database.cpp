@@ -3,20 +3,20 @@
 #include <QCoreApplication>
 
 Database::Database() {
-    // Ініціалізація підключення до SQLite
+    // Initializing SQLite connection
     db = QSqlDatabase::addDatabase("QSQLITE");
     QString path = QCoreApplication::applicationDirPath() + "/library.db";
     db.setDatabaseName(path);
 }
 
 bool Database::openConnection() {
-    qDebug() << "Шлях до бази:" << QDir::currentPath();
+    qDebug() << "Database path:" << QDir::currentPath();
 
     if (!db.open()) {
-        qDebug() << "Помилка відкриття бази:" << db.lastError().text();
+        qDebug() << "Database open error:" << db.lastError().text();
         return false;
     }
-    qDebug() << "Підключення до бази успішне!";
+    qDebug() << "Database connection successful!";
     return true;
 }
 
@@ -26,7 +26,7 @@ void Database::closeConnection() {
 
 bool Database::checkLogin(const QString& username, const QString& password) {
     if (!db.isOpen()) {
-        qDebug() << "База не відкрита!";
+        qDebug() << "Database is not open!";
         return false;
     }
 
@@ -36,15 +36,15 @@ bool Database::checkLogin(const QString& username, const QString& password) {
     query.addBindValue(password);
 
     if (!query.exec()) {
-        qDebug() << "Помилка запиту:" << query.lastError().text();
+        qDebug() << "Query error:" << query.lastError().text();
         return false;
     }
 
     if (query.next()) {
-        qDebug() << "Успішний вхід користувача:" << username;
+        qDebug() << "User login successful:" << username;
         return true;
     } else {
-        qDebug() << "Немає користувача з таким логіном або паролем.";
+        qDebug() << "No user found with such login or password.";
     }
 
     return false;
@@ -102,6 +102,31 @@ int Database::getPublishersCount()
         db.open();
 
     QSqlQuery query("SELECT COUNT(DISTINCT publisher) FROM books");
+
+    if (query.next())
+        return query.value(0).toInt();
+
+    return 0;
+}
+
+int Database::getStudentsCount()
+{
+    if (!db.isOpen())
+        db.open();
+
+    QSqlQuery query("SELECT COUNT(*) FROM students");
+    if (query.next())
+        return query.value(0).toInt();
+
+    return 0;
+}
+
+int Database::getAvailableBooksCount()
+{
+    if (!db.isOpen())
+        db.open();
+
+    QSqlQuery query("SELECT COUNT(*) FROM books WHERE available = 1");
 
     if (query.next())
         return query.value(0).toInt();

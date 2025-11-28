@@ -17,37 +17,37 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-// Натискання на кнопку Login
+// Clicking the Login button
 void MainWindow::on_loginOptionButton_clicked() {
-    // Створюємо вікно логіну
+    // Create the login window
     LoginWindow *loginDialog = new LoginWindow();
 
-    // З'єднуємо сигнал успішного входу з методом у MainWindow
+    // Connect the successful login signal with a method in MainWindow
     connect(loginDialog, &LoginWindow::loginSuccessful,
             this, &MainWindow::onUserLoggedIn);
 
-    // Показуємо LoginWindow
+    // Show LoginWindow
     loginDialog->show();
 
-    // Закриваємо головне вікно (MainWindow)
+    // Close the main window (MainWindow)
     this->close();
 }
 
 
-// Обробка сигналу після успішного входу
+// Handling the signal after successful login
 void MainWindow::onUserLoggedIn(const QString &role) {
     if (role == "admin") {
         AdminMenu *admin = new AdminMenu();
         admin->show();
 
-        // Закриваємо і головне, і вікно логіну
-        this->close();  // закриває MainWindow
+        // Close both the main window and the login window
+        this->close();  // closes MainWindow
         if (auto login = this->findChild<LoginWindow *>()) {
-            login->close(); // закриває LoginWindow, якщо ще відкрите
+            login->close(); // closes LoginWindow if still open
         }
     } else {
-        QMessageBox::information(this, "Вхід", "Ви увійшли як користувач.");
-        this->close(); // якщо треба також закривати головне вікно після входу
+        QMessageBox::information(this, "Login", "You have logged in as a user.");
+        this->close(); // close main window after login if required
     }
 }
 
@@ -55,7 +55,7 @@ void MainWindow::on_signupOptionButton_clicked()
 {
     SignupWindow *signup = new SignupWindow();
 
-    // коли студент зареєструвався
+   // When a student registers
     connect(signup, &SignupWindow::signupSuccessful, this,
             [this](QString role){
                 if (role == "student") {

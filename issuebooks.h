@@ -22,7 +22,14 @@ private slots:
 
 private:
     Ui::IssueBooks *ui;
-    void clearFields();  // окремий метод для очищення полів
+    void clearFields();
+    void loadStudentHints();
+    void fillStudentEmail(const QString &name);
+    void loadBookHints();
+    void fillBookId(const QString &title);
+
+    QMap<QString, QString> studentEmails;
+    QMap<QString, int> bookIds;
 };
 
 #endif // ISSUEBOOKS_H

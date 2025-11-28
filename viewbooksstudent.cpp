@@ -1,37 +1,37 @@
-#include "viewbooks.h"
-#include "ui_viewbooks.h"
-#include "adminmenu.h"
+#include "viewbooksstudent.h"
+#include "ui_viewbooksstudent.h"
+#include "studentmenu.h"
 #include <QMessageBox>
 #include <QHeaderView>
 
-ViewBooks::ViewBooks(QWidget *parent)
+ViewBooksStudent::ViewBooksStudent(QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::ViewBooks)
+    , ui(new Ui::ViewBooksStudent)
     , model(nullptr)
 {
     ui->setupUi(this);
-    loadBooks(); // immediately show all books
+    loadBooks(); // одразу показуємо всі книги
 
     ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
 }
 
-ViewBooks::~ViewBooks()
+ViewBooksStudent::~ViewBooksStudent()
 {
     delete ui;
 }
 
-void ViewBooks::on_goBackButton_clicked()
+void ViewBooksStudent::on_goBackButton_clicked()
 {
-    AdminMenu *adminMenu = new AdminMenu();
-    adminMenu->show();
+    StudentMenu *studentMenu = new StudentMenu();
+    studentMenu->show();
     this->close();
 }
 
-void ViewBooks::loadBooks()
+void ViewBooksStudent::loadBooks()
 {
     Database db;
     if (!db.openConnection()) {
-        QMessageBox::critical(this, "Error", "Failed to connect to the database!");
+        QMessageBox::critical(this, "Помилка", "Не вдалося підключитися до бази даних!");
         return;
     }
 
@@ -42,7 +42,7 @@ void ViewBooks::loadBooks()
 
     QString filter = "";
 
-    // Get values from search fields
+    // Отримуємо значення з полів пошуку
     QString title = ui->searchBookLineEdit->text().trimmed();
     QString author = ui->authorLineEdit->text().trimmed();
     QString publisher = ui->publisherLineEdit->text().trimmed();
@@ -50,7 +50,7 @@ void ViewBooks::loadBooks()
     QString genre = ui->categoryComboBox->currentText().trimmed();
     bool available = ui->availableCheckBox->isChecked();
 
-    // Build filter
+    // Формуємо фільтр
     if (!title.isEmpty()) {
         filter += QString("title LIKE '%%1%'").arg(title);
     }
@@ -72,14 +72,14 @@ void ViewBooks::loadBooks()
     }
     if (available) {
         if (!filter.isEmpty()) filter += " AND ";
-        filter += "available = 1";
+        filter += "available = 1";  // або "available = 0" якщо хочете показувати відсутні книги
     }
 
-    // Apply filter if exists
+    // Якщо є фільтр, застосовуємо його
     if (!filter.isEmpty()) {
         model->setFilter(filter);
     } else {
-        model->setFilter(""); // show all books
+        model->setFilter(""); // без фільтра — всі книги
     }
 
     model->select();
@@ -93,13 +93,13 @@ void ViewBooks::loadBooks()
 
     ui->tableView->setModel(model);
 
-    // Auto-adjust columns
+    // Автоматичне підлаштування колонок
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    // Scrollbars
+    // Налаштування скролбарів
     ui->tableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
@@ -107,26 +107,26 @@ void ViewBooks::loadBooks()
 }
 
 
-void ViewBooks::on_searchButton_clicked()
+void ViewBooksStudent::on_searchButton_clicked()
 {
     loadBooks();
 }
 
-void ViewBooks::on_clearButton_clicked()
+void ViewBooksStudent::on_clearButton_clicked()
 {
-    // Clear all fields
+    // Очищаємо всі поля
     ui->searchBookLineEdit->clear();
     ui->authorLineEdit->clear();
     ui->publisherLineEdit->clear();
     ui->idLineEdit->clear();
 
-    // Reset category to default
+    // Повертаємо category на вибір за замовчуванням
     ui->categoryComboBox->setCurrentIndex(0);
 
-    // Uncheck availability checkbox
+    // Забираємо чекбокс доступності
     ui->availableCheckBox->setChecked(false);
 
-    // Refresh table without filters
+    // Оновлюємо таблицю без фільтрів
     loadBooks();
 }
 

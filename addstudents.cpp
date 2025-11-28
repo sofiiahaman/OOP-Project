@@ -8,6 +8,8 @@ AddStudents::AddStudents(QWidget *parent)
     , ui(new Ui::AddStudents)
 {
     ui->setupUi(this);
+
+    ui->goBackButton_2->setIcon(QIcon(":/icons/icons/left-arrow.png"));
 }
 
 AddStudents::~AddStudents()
@@ -28,13 +30,13 @@ void AddStudents::on_saveButton_2_clicked()
     QString email = ui->studentEmailLineEdit_2->text().trimmed();
 
     if (name.isEmpty() || email.isEmpty()) {
-        QMessageBox::warning(this, "Помилка", "Будь ласка, заповніть усі поля!");
+        QMessageBox::warning(this, "Error", "Please fill in all fields!");
         return;
     }
 
     Database db;
     if (!db.openConnection()) {
-        QMessageBox::critical(this, "Помилка", "Не вдалося підключитися до бази даних.");
+        QMessageBox::critical(this, "Error", "Failed to connect to the database.");
         return;
     }
 
@@ -44,11 +46,11 @@ void AddStudents::on_saveButton_2_clicked()
     query.addBindValue(email);
 
     if (query.exec()) {
-        QMessageBox::information(this, "Успіх", "Студента успішно додано!");
+        QMessageBox::information(this, "Success", "Student added successfully!");
         ui->studentNameLineEdit_2->clear();
         ui->studentEmailLineEdit_2->clear();
     } else {
-        QMessageBox::critical(this, "Помилка", "Не вдалося додати студента: " + query.lastError().text());
+        QMessageBox::critical(this, "Error", "Failed to add student: " + query.lastError().text());
     }
 
     db.closeConnection();

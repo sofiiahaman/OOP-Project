@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ViewBooks</class>
- <widget class="QDialog" name="ViewBooks">
+ <class>ViewBooksStudent</class>
+ <widget class="QDialog" name="ViewBooksStudent">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>871</width>
-    <height>561</height>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -142,6 +142,7 @@ font-size: 18px;
 QPushButton#goBackButton:hover {
     background-color: #d7d9c6;
 }
+
 
 /* ===== Таблиця ===== */
 QTableView {
@@ -613,12 +614,12 @@ QScrollBar::add-line, QScrollBar::sub-line {
                 </item>
                 <item>
                  <property name="text">
-                  <string>Programming</string>
+                  <string>Програмування</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Fiction</string>
+                  <string>Художня література</string>
                  </property>
                 </item>
                </widget>

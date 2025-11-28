@@ -21,16 +21,16 @@ public:
 private slots:
     void on_goBackButton_5_clicked();
 
-    // Завантажити транзакції по імені студента
+    // Load transactions by student name
     void loadTransactionsByStudent(const QString &name);
 
-    // Клік по рядку таблиці
+    // Click on table row
     void onTransactionSelected(const QModelIndex &index);
 
-    // Натискання кнопки Return
+    // "Return" button click
     void onReturnClicked();
 
-    // Очищення всіх полів
+    // Clear all fields
     void clearFields();
 
 private:

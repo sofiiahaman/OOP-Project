@@ -2,7 +2,6 @@
 #define ADDBOOKS_H
 
 #include <QDialog>
-#include "adminmenu.h"
 
 namespace Ui {
 class AddBooks;
@@ -23,6 +22,7 @@ private slots:
 
 private:
     Ui::AddBooks *ui;
+    void loadCategoryHints();
 };
 
 #endif // ADDBOOKS_H

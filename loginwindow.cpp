@@ -24,7 +24,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
 
     if (!db.openConnection()) {
-        QMessageBox::critical(this, "Помилка", "Не вдалося підключитись до бази даних!");
+        QMessageBox::critical(this, "Error", "Failed to connect to the database!");
     }
 }
 
@@ -41,18 +41,18 @@ void LoginWindow::on_loginButton_clicked() {
         QString role = db.getUserRole(username);
 
         if (role == "student") {
-            // Відкриваємо вікно StudentMenu
+            // Open StudentMenu window
             StudentMenu *studentMenu = new StudentMenu();
             studentMenu->show();
 
             this->close();
         } else {
-            // Якщо інша роль — працюємо стандартно
+            // For other roles – standard handling
             emit loginSuccessful(role);
             this->close();
         }
     } else {
-        QMessageBox::warning(this, "Помилка", "Неправильний логін або пароль!");
+        QMessageBox::warning(this, "Error", "Incorrect username or password!");
     }
 }
 

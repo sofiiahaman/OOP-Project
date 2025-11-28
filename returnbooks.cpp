@@ -17,45 +17,47 @@ ReturnBooks::ReturnBooks(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->goBackButton_5->setIcon(QIcon(":/icons/icons/left-arrow.png"));
+
     Database db;
     if (!db.openConnection()) {
-        qDebug() << "Не вдалося відкрити базу!";
+        qDebug() << "Failed to open database!";
         return;
     }
 
-    // Додаємо випадаючий список для studentNameLineEdit
+    // Add dropdown list for studentNameLineEdit
     QSqlQuery query;
     query.prepare("SELECT name FROM students");
 
     if (query.exec()) {
         QStringList studentNames;
         while (query.next()) {
-            studentNames << query.value(0).toString();  // Додаємо ім'я студента до списку
+            studentNames << query.value(0).toString();  // Add student name to the list
         }
 
-        // Перевіряємо, чи є студенти в списку
+        // Check if list is empty
         if (studentNames.isEmpty()) {
-            qDebug() << "Список студентів порожній!";
+            qDebug() << "Student list is empty!";
         } else {
-            // Створюємо модель для автодоповнення
+            // Create a model for autocomplete
             QStringListModel *model = new QStringListModel(this);
             model->setStringList(studentNames);
 
-            // Підключаємо модель до completer
+            // Connect model to completer
             QCompleter *completer = new QCompleter(model, this);
-            completer->setCaseSensitivity(Qt::CaseInsensitive);  // Чутливість до регістру
-            completer->setFilterMode(Qt::MatchContains); // Використовуємо частковий збіг
+            completer->setCaseSensitivity(Qt::CaseInsensitive);
+            completer->setFilterMode(Qt::MatchContains);
             ui->studentNameLineEdit->setCompleter(completer);
         }
     } else {
-        qDebug() << "Помилка виконання запиту на вибір студентів: " << query.lastError();
+        qDebug() << "Error executing student query: " << query.lastError();
     }
 
     searchTimer = new QTimer(this);
     searchTimer->setSingleShot(true);
 
     connect(ui->studentNameLineEdit, &QLineEdit::textEdited, this, [=](const QString &text){
-        searchTimer->start(300); // 300 мс затримка
+        searchTimer->start(300); // 300 ms delay
     });
 
     connect(searchTimer, &QTimer::timeout, this, [=](){
@@ -78,7 +80,7 @@ ReturnBooks::~ReturnBooks()
 }
 
 /* ========================
- * Завантаження транзакцій
+ * Loading transactions
  * ======================== */
 void ReturnBooks::loadTransactionsByStudent(const QString &name)
 {
@@ -90,10 +92,9 @@ void ReturnBooks::loadTransactionsByStudent(const QString &name)
         return;
     }
 
-    // Перевірка, чи база відкрита
     if (!QSqlDatabase::database().isOpen()) {
         if (!QSqlDatabase::database().open()) {
-            qDebug() << "База не відкрита!";
+            qDebug() << "Database not open!";
             return;
         }
     }
@@ -123,7 +124,7 @@ void ReturnBooks::loadTransactionsByStudent(const QString &name)
 
 
 /* ========================
- * Вибір транзакції
+ * Selecting a transaction
  * ======================== */
 void ReturnBooks::onTransactionSelected(const QModelIndex &index)
 {
@@ -164,13 +165,13 @@ void ReturnBooks::onTransactionSelected(const QModelIndex &index)
 }
 
 /* ========================
- * Повернення книги
+ * Returning a book
  * ======================== */
 void ReturnBooks::onReturnClicked()
 {
     if(ui->issueIDLineEdit->text().isEmpty())
     {
-        QMessageBox::warning(this, "Помилка", "Оберіть транзакцію для повернення.");
+        QMessageBox::warning(this, "Error", "Select a transaction to return.");
         return;
     }
 
@@ -181,7 +182,7 @@ void ReturnBooks::onReturnClicked()
 
     QSqlQuery query;
 
-    // Оновлюємо return_date
+    // Update return_date
     query.prepare("UPDATE transactions SET return_date = :rd WHERE id = :id");
     query.bindValue(":rd", QDate::currentDate().toString("yyyy-MM-dd"));
     query.bindValue(":id", transactionId);
@@ -189,31 +190,31 @@ void ReturnBooks::onReturnClicked()
     if(!query.exec())
     {
         QSqlDatabase::database().rollback();
-        QMessageBox::critical(this, "Помилка", "Не вдалося оновити транзакцію.");
+        QMessageBox::critical(this, "Error", "Failed to update transaction.");
         return;
     }
 
-    // Робимо книгу доступною
+    // Make book available again
     query.prepare("UPDATE books SET available = 1 WHERE id = :bid");
     query.bindValue(":bid", bookId);
 
     if(!query.exec())
     {
         QSqlDatabase::database().rollback();
-        QMessageBox::critical(this, "Помилка", "Не вдалося оновити книгу.");
+        QMessageBox::critical(this, "Error", "Failed to update book.");
         return;
     }
 
     QSqlDatabase::database().commit();
 
-    QMessageBox::information(this, "Успішно", "Книга успішно повернена!");
+    QMessageBox::information(this, "Success", "Book successfully returned!");
 
     clearFields();
     loadTransactionsByStudent(ui->studentNameLineEdit->text());
 }
 
 /* ========================
- * Очищення полів
+ * Clearing input fields
  * ======================== */
 void ReturnBooks::clearFields()
 {
