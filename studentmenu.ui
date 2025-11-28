@@ -11,10 +11,16 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Library management system</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">QWidget#StudentMenu {
+    background-color: #f4f4db;  
+}
+
+QMenuBar {
+ background-color: #a9c3a6;
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
@@ -23,20 +29,31 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuBooks">
+    <property name="font">
+     <font>
+      <family>Arial Rounded MT</family>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="title">
      <string>Books</string>
     </property>
     <addaction name="actionView_books"/>
    </widget>
    <widget class="QMenu" name="menuUser">
+    <property name="font">
+     <font>
+      <family>Arial Rounded MT</family>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="title">
      <string>User</string>
     </property>
-    <addaction name="actionIssue_history"/>
     <addaction name="actionLogout"/>
    </widget>
    <addaction name="menuBooks"/>
@@ -47,6 +64,12 @@
    <property name="text">
     <string>View books</string>
    </property>
+   <property name="font">
+    <font>
+     <family>Arial Rounded MT</family>
+     <bold>true</bold>
+    </font>
+   </property>
   </action>
   <action name="actionIssue_history">
    <property name="text">
@@ -56,6 +79,12 @@
   <action name="actionLogout">
    <property name="text">
     <string>Logout</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial Rounded MT</family>
+     <bold>true</bold>
+    </font>
    </property>
   </action>
  </widget>

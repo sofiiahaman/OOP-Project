@@ -17,16 +17,16 @@ public:
     ~EditStudentInformation();
 
 private slots:
-    // Завантаження студентів у таблицю
+    // Load students into the table
     void loadStudents(const QString &name);
 
-    // Вибір студента з таблиці
+    // Select a student from the table
     void onStudentSelected(const QModelIndex &index);
 
-    // Збереження змін
+    // Save updates
     void saveChanges();
 
-    // Очищення полів
+    // Clear input fields
     void clearFields();
 
     void on_goBackButton_clicked();

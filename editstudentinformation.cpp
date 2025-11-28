@@ -16,13 +16,15 @@ EditStudentInformation::EditStudentInformation(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Завантажуємо студентів у таблицю при введенні імені
+    ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
+
+    // Load students into the table when typing a name
     connect(ui->enterNameLineEdit, &QLineEdit::textChanged, this, &EditStudentInformation::loadStudents);
 
-    // Підключаємо сигнал для вибору рядка таблиці
+    // Connect table row selection
     connect(ui->studentsTableView, &QTableView::clicked, this, &EditStudentInformation::onStudentSelected);
 
-    // Підключаємо кнопку збереження змін
+    // Connect save changes button
     connect(ui->saveButton, &QPushButton::clicked, this, &EditStudentInformation::saveChanges);
 }
 
@@ -32,35 +34,35 @@ EditStudentInformation::~EditStudentInformation()
 }
 
 /* ========================
- * Завантаження студентів
+ * Loading students
  * ======================== */
 void EditStudentInformation::loadStudents(const QString &name)
 {
-    // Перевірка на мінімум 2 символи для пошуку
+    // Check minimum 2 characters for search
     if (name.trimmed().length() < 2) {
         ui->studentsTableView->setModel(nullptr);
         return;
     }
 
-    // Підключаємо базу даних
+    // Connect to database
     Database db;
     if (!db.openConnection()) {
         qDebug() << "Не вдалося відкрити базу!";
         return;
     }
 
-    // Створюємо SQL запит для отримання студентів за іменем
+    // Create SQL query to retrieve students by name
     QSqlQuery query;
     query.prepare("SELECT id, name, email FROM students WHERE name LIKE :name");
     query.bindValue(":name", "%" + name + "%");
 
-    // Виконуємо запит
+    // Execute query
     if (!query.exec()) {
         qDebug() << "Помилка запиту:" << query.lastError().text();
         return;
     }
 
-    // Завантажуємо результат у модель для таблиці
+    // Load results into the table model
     QSqlQueryModel *model = new QSqlQueryModel();
     model->setQuery(query);
     ui->studentsTableView->setModel(model);
@@ -68,7 +70,7 @@ void EditStudentInformation::loadStudents(const QString &name)
 }
 
 /* ========================
- * Вибір студента з таблиці
+ * Selecting a student from table
  * ======================== */
 void EditStudentInformation::onStudentSelected(const QModelIndex &index)
 {
@@ -77,20 +79,20 @@ void EditStudentInformation::onStudentSelected(const QModelIndex &index)
     int row = index.row();
     QAbstractItemModel *model = ui->studentsTableView->model();
 
-    int studentId = model->index(row, 0).data().toInt();  // ID студента
-    QString studentName = model->index(row, 1).data().toString();  // Ім'я студента
-    QString studentEmail = model->index(row, 2).data().toString();  // Електронна пошта студента
+    int studentId = model->index(row, 0).data().toInt();           // Student ID
+    QString studentName = model->index(row, 1).data().toString();  // Student name
+    QString studentEmail = model->index(row, 2).data().toString(); // Student email
 
-    // Заповнюємо відповідні поля
+    // Fill input fields
     ui->studentNameLineEdit->setText(studentName);
     ui->studentEmailLineEdit->setText(studentEmail);
 
-    // Зберігаємо ID студента для подальшого оновлення
+    // Store student ID for update
     currentStudentId = studentId;
 }
 
 /* ========================
- * Збереження змін
+ * Saving changes
  * ======================== */
 void EditStudentInformation::saveChanges()
 {
@@ -98,18 +100,18 @@ void EditStudentInformation::saveChanges()
     QString updatedEmail = ui->studentEmailLineEdit->text();
 
     if (updatedName.isEmpty() || updatedEmail.isEmpty()) {
-        QMessageBox::warning(this, "Помилка", "Всі поля повинні бути заповнені!");
+        QMessageBox::warning(this, "Error", "All fields must be filled!");
         return;
     }
 
-    // Підключаємо базу даних
+    // Connect to database
     Database db;
     if (!db.openConnection()) {
-        qDebug() << "Не вдалося відкрити базу!";
+        qDebug() << "Failed to open database!";
         return;
     }
 
-    // Оновлюємо дані студента в базі даних
+    // Update student information in the database
     QSqlQuery query;
     query.prepare("UPDATE students SET name = :name, email = :email WHERE id = :id");
     query.bindValue(":name", updatedName);
@@ -117,25 +119,25 @@ void EditStudentInformation::saveChanges()
     query.bindValue(":id", currentStudentId);
 
     if (!query.exec()) {
-        qDebug() << "Помилка при оновленні даних студента:" << query.lastError().text();
+        qDebug() << "Error updating student data:" << query.lastError().text();
         return;
     }
 
-    QMessageBox::information(this, "Успішно", "Дані студента оновлено!");
+    QMessageBox::information(this, "Success", "Student information updated!");
 
-    // Очищаємо поля
+    // Clear fields
     clearFields();
 }
 
 /* ========================
- * Очищення полів
+ * Clearing fields
  * ======================== */
 void EditStudentInformation::clearFields()
 {
     ui->enterNameLineEdit->clear();
     ui->studentNameLineEdit->clear();
     ui->studentEmailLineEdit->clear();
-    ui->studentsTableView->setModel(nullptr);  // Очищаємо таблицю
+    ui->studentsTableView->setModel(nullptr);  // Clear table
 }
 
 void EditStudentInformation::on_goBackButton_clicked()

@@ -25,7 +25,7 @@ private slots:
 
 private:
     Ui::ViewBooksStudent *ui;
-    QSqlTableModel *model;   // модель для таблиці
+    QSqlTableModel *model;
     void loadBooks();
 };
 

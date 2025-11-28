@@ -10,7 +10,7 @@ ViewBooksStudent::ViewBooksStudent(QWidget *parent)
     , model(nullptr)
 {
     ui->setupUi(this);
-    loadBooks(); // одразу показуємо всі книги
+    loadBooks(); // immediately show all books
 
     ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
 }
@@ -31,7 +31,7 @@ void ViewBooksStudent::loadBooks()
 {
     Database db;
     if (!db.openConnection()) {
-        QMessageBox::critical(this, "Помилка", "Не вдалося підключитися до бази даних!");
+        QMessageBox::critical(this, "Error", "Failed to connect to the database!");
         return;
     }
 
@@ -42,7 +42,7 @@ void ViewBooksStudent::loadBooks()
 
     QString filter = "";
 
-    // Отримуємо значення з полів пошуку
+    // Get values from search fields
     QString title = ui->searchBookLineEdit->text().trimmed();
     QString author = ui->authorLineEdit->text().trimmed();
     QString publisher = ui->publisherLineEdit->text().trimmed();
@@ -50,7 +50,7 @@ void ViewBooksStudent::loadBooks()
     QString genre = ui->categoryComboBox->currentText().trimmed();
     bool available = ui->availableCheckBox->isChecked();
 
-    // Формуємо фільтр
+    // Build filter
     if (!title.isEmpty()) {
         filter += QString("title LIKE '%%1%'").arg(title);
     }
@@ -72,14 +72,14 @@ void ViewBooksStudent::loadBooks()
     }
     if (available) {
         if (!filter.isEmpty()) filter += " AND ";
-        filter += "available = 1";  // або "available = 0" якщо хочете показувати відсутні книги
+        filter += "available = 1";
     }
 
-    // Якщо є фільтр, застосовуємо його
+    // Apply filter if exists
     if (!filter.isEmpty()) {
         model->setFilter(filter);
     } else {
-        model->setFilter(""); // без фільтра — всі книги
+        model->setFilter(""); // show all books
     }
 
     model->select();
@@ -93,13 +93,13 @@ void ViewBooksStudent::loadBooks()
 
     ui->tableView->setModel(model);
 
-    // Автоматичне підлаштування колонок
+    // Auto-adjust columns
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    // Налаштування скролбарів
+    // Scrollbars
     ui->tableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
@@ -114,19 +114,19 @@ void ViewBooksStudent::on_searchButton_clicked()
 
 void ViewBooksStudent::on_clearButton_clicked()
 {
-    // Очищаємо всі поля
+    // Clear all fields
     ui->searchBookLineEdit->clear();
     ui->authorLineEdit->clear();
     ui->publisherLineEdit->clear();
     ui->idLineEdit->clear();
 
-    // Повертаємо category на вибір за замовчуванням
+    // Reset category to default
     ui->categoryComboBox->setCurrentIndex(0);
 
-    // Забираємо чекбокс доступності
+    // Uncheck availability checkbox
     ui->availableCheckBox->setChecked(false);
 
-    // Оновлюємо таблицю без фільтрів
+    // Refresh table without filters
     loadBooks();
 }
 

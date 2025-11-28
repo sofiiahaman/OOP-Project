@@ -100,13 +100,13 @@ QLabel#iconLabel {
 }
 </string>
   </property>
-  <widget class="QWidget" name="verticalLayoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>10</y>
+     <x>11</x>
+     <y>11</y>
      <width>441</width>
-     <height>511</height>
+     <height>501</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1,1,1,1,0,0">
@@ -348,7 +348,7 @@ QLabel#iconLabel {
          <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
         <property name="placeholderText">
-         <string>Username</string>
+         <string>Email</string>
         </property>
        </widget>
       </item>

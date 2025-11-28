@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>892</width>
-    <height>585</height>
+    <width>898</width>
+    <height>581</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>View student information</string>
   </property>
   <property name="styleSheet">
    <string notr="true">/* ======== MAIN WINDOW ======== */
@@ -66,11 +66,15 @@ QLineEdit:focus {
     background-color: #5b6c50;
 }
 
-/* ======== BACK BUTTON ======== */
+/* BACK BUTTON */
 #goBackButton {
     background: transparent;
     border: none;
-    font-size: 20px;
+    color: #42522b;
+    font-size: 16px;
+}
+QPushButton#goBackButton:hover {
+    background-color: #d7d9c6;
 }
 
 /* ======== TABLE VIEW ======== */
@@ -127,58 +131,35 @@ QScrollBar::handle:hover {
    </property>
    <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,2">
     <property name="spacing">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="sizeConstraint">
      <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
     </property>
     <property name="leftMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="topMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="rightMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <item>
        <widget class="QPushButton" name="goBackButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">#goBackButton {
-    background-color: white;     /* білий фон */
-    color: #333333;              /* темно-сірий текст */
-    border: 1px solid #cccccc;   /* легка сіра рамка */
-    border-radius: 8px;          /* заокруглені кути */
-    padding: 6px 12px;           /* відступи */
-}
-
-#goBackButton:hover {
-    background-color: #f2f2f2;   /* трохи темніший при наведенні */
-}
-
-#goBackButton:pressed {
-    background-color: #e6e6e6;   /* ще темніший при натисканні */
-}</string>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="text">
          <string/>
@@ -193,6 +174,9 @@ QScrollBar::handle:hover {
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::Expanding</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -229,6 +213,9 @@ QScrollBar::handle:hover {
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::Expanding</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -268,7 +255,7 @@ QScrollBar::handle:hover {
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>861</width>
+         <width>881</width>
          <height>131</height>
         </rect>
        </property>
@@ -379,8 +366,8 @@ QScrollBar::handle:hover {
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>861</width>
-         <height>261</height>
+         <width>871</width>
+         <height>281</height>
         </rect>
        </property>
        <property name="minimumSize">

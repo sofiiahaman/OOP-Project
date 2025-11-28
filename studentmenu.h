@@ -15,6 +15,11 @@ public:
     explicit StudentMenu(QWidget *parent = nullptr);
     ~StudentMenu();
 
+private slots:
+    void on_actionLogout_triggered();
+    void on_actionView_books_triggered();
+    void paintEvent(QPaintEvent *event);
+
 private:
     Ui::StudentMenu *ui;
 };

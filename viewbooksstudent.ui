@@ -614,12 +614,12 @@ QScrollBar::add-line, QScrollBar::sub-line {
                 </item>
                 <item>
                  <property name="text">
-                  <string>Програмування</string>
+                  <string>Programming</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Художня література</string>
+                  <string>Fiction</string>
                  </property>
                 </item>
                </widget>

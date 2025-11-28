@@ -15,20 +15,22 @@ ViewStudentInformation::ViewStudentInformation(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // Підключення до бази даних
+    ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
+
+    // Database connection
     QSqlDatabase db = QSqlDatabase::database();
     if (!db.isOpen()) {
         QMessageBox::critical(this, "Database Error", "Cannot open database connection!");
         return;
     }
 
-    // Встановлюємо модель для таблиці
+    // Set table model
     model->setTable("students");
     model->select();
 
     ui->tableView->setModel(model);
 
-    // Автоматичне розтягування колонок
+    // Auto-resize columns
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
@@ -38,7 +40,7 @@ ViewStudentInformation::~ViewStudentInformation()
     delete ui;
 }
 
-// Завантаження даних студентів (із фільтром або без)
+// Load student data (with or without filter)
 void ViewStudentInformation::loadStudentData(const QString &filter)
 {
     if (filter.isEmpty()) {
@@ -49,14 +51,14 @@ void ViewStudentInformation::loadStudentData(const QString &filter)
     model->select();
 }
 
-// Кнопка "Refresh" — застосовує фільтр за іменем
+// "Refresh" button — applies filter by student name
 void ViewStudentInformation::on_refreshButton_clicked()
 {
     QString nameFilter = ui->studentNameLineEdit->text().trimmed();
     loadStudentData(nameFilter);
 }
 
-// Кнопка "← back" — повернення до меню адміністратора
+// "Back" button — return to admin menu
 void ViewStudentInformation::on_goBackButton_clicked()
 {
     this->close();

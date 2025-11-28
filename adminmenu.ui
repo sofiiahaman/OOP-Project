@@ -11,11 +11,15 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Library management system</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget#AdminMenu {
     background-color: #f4f4db;  
+}
+
+QMenuBar {
+ background-color: #a9c3a6;
 }
 
 /* Загальний стиль для всіх карток */
@@ -23,6 +27,8 @@ QFrame#booksCard,
 QFrame#authorsCard, 
 QFrame#categoriesCard,
 QFrame#publishersCard,
+QFrame#studentsCard,
+QFrame#bookAvailableCard,
 QFrame#bookIssueCard,
 QFrame#bookReturnedCard,
 QFrame#bookNotReturnCard {
@@ -35,6 +41,8 @@ QFrame#booksCard QLabel:first-child,
 QFrame#authorsCard QLabel:first-child,
 QFrame#categoriesCard QLabel:first-child,
 QFrame#publishersCard QLabel:first-child,
+QFrame#studentsCard QLabel:first-child,
+QFrame#bookAvailableCard QLabel:first-child,
 QFrame#bookIssueCard QLabel:first-child,
 QFrame#bookReturnedCard QLabel:first-child,
 QFrame#bookNotReturnCard QLabel:first-child {
@@ -70,6 +78,12 @@ QFrame#categoriesCard {
 QFrame#publishersCard {
     background-color: #40916c;   /* green */
 }
+QFrame#studentsCard {
+    background-color: #40916c;   /* green */
+}
+QFrame#bookAvailableCard {
+    background-color: #40916c;   /* green */
+}
 QFrame#bookReturnedCard {
     background-color: #8fb996;   /* light green */
 }
@@ -77,9 +91,7 @@ QFrame#bookNotReturnCard {
     background-color: #8fb996;   /* dark red */
 }
 
-QMenuBar {
- background-color: #a9c3a6;
-}
+
 </string>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -410,6 +422,102 @@ QMenuBar {
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Total book not return</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QFrame" name="studentsCard">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>170</y>
+      <width>241</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::NoFrame</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Plain</enum>
+    </property>
+    <widget class="QWidget" name="verticalLayoutWidget_8">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>241</width>
+       <height>101</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_8">
+      <item>
+       <widget class="QLabel" name="labelStudentCount">
+        <property name="text">
+         <string>labelStudentCount</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Total student</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QFrame" name="bookAvailableCard">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>170</y>
+      <width>241</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::NoFrame</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Plain</enum>
+    </property>
+    <widget class="QWidget" name="verticalLayoutWidget_9">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>241</width>
+       <height>101</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_9">
+      <item>
+       <widget class="QLabel" name="labelBookAvailableCount">
+        <property name="text">
+         <string>labelBookAvailableCount</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Total books available</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
