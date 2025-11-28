@@ -200,3 +200,59 @@ bool Database::addUser(const QString &username, const QString &password, const Q
 
     return true;
 }
+
+int Database::findStudentByEmail(const QString &email)
+{
+    QSqlQuery query;
+    query.prepare("SELECT id FROM students WHERE email = :email");
+    query.bindValue(":email", email);
+
+    if (!query.exec() || !query.next())
+        return -1;
+
+    return query.value(0).toInt();
+}
+
+bool Database::studentHasUser(int studentId)
+{
+    QSqlQuery query;
+    query.prepare("SELECT user_id FROM students WHERE id = :id");
+    query.bindValue(":id", studentId);
+    query.exec();
+
+    if (!query.next()) return false;
+
+    return !query.value(0).isNull();
+}
+
+int Database::addUserReturnId(const QString &username,
+                              const QString &password,
+                              const QString &role)
+{
+    QSqlQuery query;
+    query.prepare("INSERT INTO users (username, password, role) "
+                  "VALUES (:u, :p, :r)");
+    query.bindValue(":u", username);
+    query.bindValue(":p", password);
+    query.bindValue(":r", role);
+
+    if (!query.exec()) {
+        qDebug() << "Add user error:" << query.lastError();
+        return -1;
+    }
+
+    return query.lastInsertId().toInt();
+}
+
+
+bool Database::linkStudentWithUser(int studentId, int userId)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE students SET user_id = :uid WHERE id = :sid");
+    query.bindValue(":uid", userId);
+    query.bindValue(":sid", studentId);
+
+    return query.exec();
+}
+
+

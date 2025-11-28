@@ -17,12 +17,11 @@ public:
     ~SignupWindow();
 
 signals:
-    void signupSuccessful(QString role);  // завжди "student"
+    void signupSuccessful(QString role);  // always "student"
 
 private slots:
     void on_signupButton_clicked();
     void on_showPasswordCheckBox_stateChanged(int state);
-    // void on_backButton_clicked();
     void on_goBackButton_clicked();
 
 private:

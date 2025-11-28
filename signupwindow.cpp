@@ -1,6 +1,7 @@
 #include "signupwindow.h"
 #include "ui_signupwindow.h"
 #include "studentmenu.h"
+#include "database.h"
 #include "mainwindow.h"
 #include <QMessageBox>
 
@@ -14,6 +15,11 @@ SignupWindow::SignupWindow(QWidget *parent)
     int w = ui->userIcon->width();
     int h = ui->userIcon->height();
     ui->userIcon->setPixmap(pix1.scaled(w,h, Qt::KeepAspectRatio));
+
+    QPixmap pix4(":/icons/icons/envelope.png");
+    int w4 = ui->emailIcon->width();
+    int h4 = ui->emailIcon->height();
+    ui->emailIcon->setPixmap(pix4.scaled(w4,h4, Qt::KeepAspectRatio));
 
     QPixmap pix2(":/icons/icons/password.png");
     int w2 = ui->passwordIcon->width();
@@ -39,11 +45,12 @@ SignupWindow::~SignupWindow() {
 
 void SignupWindow::on_signupButton_clicked()
 {
+    QString email = ui->emailEdit->text();
     QString username = ui->usernameEdit->text();
     QString password = ui->passwordEdit->text();
     QString confirm = ui->confirmPasswordEdit->text();
 
-    if (username.isEmpty() || password.isEmpty()) {
+    if (email.isEmpty() || username.isEmpty() || password.isEmpty()) {
         QMessageBox::warning(this, "Error", "All fields must be filled!");
         return;
     }
@@ -53,30 +60,60 @@ void SignupWindow::on_signupButton_clicked()
         return;
     }
 
-    // Тільки студент може реєструватися
-    QString role = "student";
+    // 1. Check if a student with this email exists
+    int studentId = db.findStudentByEmail(email);
 
+    if (studentId == -1) {
+        QMessageBox::warning(this, "Error",
+                             "This email is not registered. "
+                             "Please contact the administrator.");
+        return;
+    }
+
+    // 2. Check if the user_id is already linked
+    if (db.studentHasUser(studentId)) {
+        QMessageBox::warning(this, "Error",
+                             "This student already has an account!");
+        return;
+    }
+
+   // 3. Check if the username is taken
     if (db.userExists(username)) {
         QMessageBox::warning(this, "Error", "User already exists!");
         return;
     }
 
-    if (db.addUser(username, password, role)) {
-        emit signupSuccessful(role);  // = "student"
-        this->close();
-    } else {
+    QString role = "student";
+
+    // 4. Add user (users)
+    int newUserId = db.addUserReturnId(username, password, role);
+
+    if (newUserId == -1) {
         QMessageBox::critical(this, "Error", "Failed to create account!");
+        return;
     }
+
+    // 5. Write user_id into students
+    if (!db.linkStudentWithUser(studentId, newUserId)) {
+        QMessageBox::critical(this, "Error", "Failed to link student to account!");
+        return;
+    }
+
+    QMessageBox::information(this, "Success", "Account created successfully!");
+    emit signupSuccessful(role);
+
+    this->close();
 }
+
 
 void SignupWindow::on_showPasswordCheckBox_stateChanged(int state)
 {
     QLineEdit::EchoMode mode;
 
     if (state == Qt::Checked)
-        mode = QLineEdit::Normal;            // показує текст
+        mode = QLineEdit::Normal;            // show text
     else
-        mode = QLineEdit::Password;          // приховує текст
+        mode = QLineEdit::Password;          // hide text
 
     ui->passwordEdit->setEchoMode(mode);
     ui->confirmPasswordEdit->setEchoMode(mode);
