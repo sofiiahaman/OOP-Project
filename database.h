@@ -9,10 +9,13 @@
 class Database {
 public:
     Database();
-    bool openConnection();
-    void closeConnection();
-    bool checkLogin(const QString& username, const QString& password);
-    QString getUserRole(const QString &username);
+    virtual ~Database() = default;
+    virtual bool openConnection();
+    virtual void closeConnection();
+    virtual bool checkLogin(const QString& username, const QString& password);
+    virtual QString getUserRole(const QString &username);
+
+    static void setTestDatabase(const QString& path);
 
     int getBooksCount();
     int getAuthorsCount();
@@ -25,15 +28,16 @@ public:
     int getNotReturnBooksCount();
 
 
-    bool userExists(const QString &username);
+    virtual bool userExists(const QString &username);
     bool addUser(const QString &username, const QString &password, const QString &role);
-    int findStudentByEmail(const QString &email);
-    bool studentHasUser(int studentId);
-    int addUserReturnId(const QString &username, const QString &password, const QString &role);
-    bool linkStudentWithUser(int studentId, int userId);
+    virtual int findStudentByEmail(const QString &email);
+    virtual bool studentHasUser(int studentId);
+    virtual int addUserReturnId(const QString &username, const QString &password, const QString &role);
+    virtual bool linkStudentWithUser(int studentId, int userId);
 
 private:
     QSqlDatabase db;
+    static QString testDbPath;
 };
 
 #endif // DATABASE_H

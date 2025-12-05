@@ -8,6 +8,7 @@
 LoginWindow::LoginWindow(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::LoginWindow)
+    , db(new Database())
 {
     ui->setupUi(this);
 
@@ -23,27 +24,46 @@ LoginWindow::LoginWindow(QWidget *parent)
 
     ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
 
-    if (!db.openConnection()) {
+    if (!db->openConnection()) {
         QMessageBox::critical(this, "Error", "Failed to connect to the database!");
     }
 }
 
 LoginWindow::~LoginWindow() {
-    db.closeConnection();
+    db->closeConnection();
+    delete db;
     delete ui;
+}
+
+QLineEdit* LoginWindow::getUsernameEdit() const {
+    return ui->usernameEdit;
+}
+
+QLineEdit* LoginWindow::getPasswordEdit() const {
+    return ui->passwordEdit;
+}
+
+QCheckBox* LoginWindow::getShowPasswordCheckBox() const {
+    return ui->showPasswordCheckBox;
+}
+
+QPushButton* LoginWindow::getLoginButton() const {
+    return ui->loginButton;
 }
 
 void LoginWindow::on_loginButton_clicked() {
     QString username = ui->usernameEdit->text();
     QString password = ui->passwordEdit->text();
 
-    if (db.checkLogin(username, password)) {
-        QString role = db.getUserRole(username);
+    if (db->checkLogin(username, password)) {
+        QString role = db->getUserRole(username);
 
         if (role == "student") {
             // Open StudentMenu window
+            #ifndef UNIT_TEST
             StudentMenu *studentMenu = new StudentMenu();
             studentMenu->show();
+            #endif
 
             this->close();
         } else {
@@ -67,8 +87,18 @@ void LoginWindow::on_showPasswordCheckBox_stateChanged(int state)
 
 void LoginWindow::on_goBackButton_clicked()
 {
+    #ifndef UNIT_TEST
     MainWindow *addMainWindow = new MainWindow();
     addMainWindow->show();
+    #endif
 
     this->close();
 }
+
+void LoginWindow::setDatabase(Database *newDb) {
+    if (db)
+        delete db;
+
+    db = newDb;
+}
+

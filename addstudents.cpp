@@ -19,8 +19,10 @@ AddStudents::~AddStudents()
 
 void AddStudents::on_goBackButton_2_clicked()
 {
+    #ifndef UNIT_TEST
     AdminMenu *adminMenu = new AdminMenu();
     adminMenu->show();
+    #endif
     this->close();
 }
 

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "database.h"
+#include "ui_loginwindow.h"
 
 namespace Ui {
 class LoginWindow;
@@ -14,6 +15,13 @@ class LoginWindow : public QDialog {
 public:
     explicit LoginWindow(QWidget *parent = nullptr);
     ~LoginWindow();
+    void setDatabase(Database *newDb);
+
+    // --- GETTERS FOR TESTS ---
+    QLineEdit* getUsernameEdit() const;
+    QLineEdit* getPasswordEdit() const;
+    QCheckBox* getShowPasswordCheckBox() const;
+    QPushButton* getLoginButton() const;
 
 private slots:
     void on_loginButton_clicked();
@@ -25,7 +33,7 @@ signals:
 
 private:
     Ui::LoginWindow *ui;
-    Database db;
+    Database* db;
 };
 
 #endif // LOGINWINDOW_H

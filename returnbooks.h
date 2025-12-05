@@ -22,10 +22,10 @@ private slots:
     void on_goBackButton_5_clicked();
 
     // Load transactions by student name
-    void loadTransactionsByStudent(const QString &name);
+    virtual void loadTransactionsByStudent(const QString &name);
 
     // Click on table row
-    void onTransactionSelected(const QModelIndex &index);
+    virtual void onTransactionSelected(const QModelIndex &index);
 
     // "Return" button click
     void onReturnClicked();

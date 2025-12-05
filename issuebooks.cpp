@@ -194,8 +194,10 @@ void IssueBooks::on_cancelButton_clicked()
 void IssueBooks::on_goBackButton_clicked()
 {
     this->close();
+    #ifndef UNIT_TEST
     AdminMenu *adminMenu = new AdminMenu();
     adminMenu->show();
+    #endif
 }
 
 void IssueBooks::clearFields()

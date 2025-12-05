@@ -255,4 +255,3 @@ bool Database::linkStudentWithUser(int studentId, int userId)
     return query.exec();
 }
 
-

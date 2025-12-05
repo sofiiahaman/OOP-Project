@@ -231,7 +231,9 @@ void ReturnBooks::clearFields()
 
 void ReturnBooks::on_goBackButton_5_clicked()
 {
+    #ifndef UNIT_TEST
     AdminMenu *adminMenu = new AdminMenu();
     adminMenu->show();
+    #endif
     this->close();
 }
