@@ -4,19 +4,36 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QString>
 #include <QDebug>
 
 class Database {
 public:
     Database();
-    virtual ~Database() = default;
-    virtual bool openConnection();
-    virtual void closeConnection();
-    virtual bool checkLogin(const QString& username, const QString& password);
-    virtual QString getUserRole(const QString &username);
 
-    static void setTestDatabase(const QString& path);
+    // --- Connection management ---
+    bool openConnection();
+    void closeConnection();
 
+    // --- Authentication and Users ---
+    bool checkLogin(const QString& username, const QString& password);
+    bool userExists(const QString &username);
+    QString getUserRole(const QString &username);
+    int addUserReturnId(const QString &username, const QString &password, const QString &role);
+
+    // --- Students ---
+    int findStudentByEmail(const QString &email);
+    bool studentHasUser(int studentId);
+    bool linkStudentWithUser(int studentId, int userId);
+
+    // --- Book and transaction management ---
+    bool addBook(const QString &title,
+                 const QString &author,
+                 const QString &publisher,
+                 const QString &category);
+    bool returnBookTransaction(int transactionId, int bookId);
+
+    // --- Dashboard statistics ---
     int getBooksCount();
     int getAuthorsCount();
     int getCategoriesCount();
@@ -27,17 +44,11 @@ public:
     int getReturnedBooksCount();
     int getNotReturnBooksCount();
 
-
-    virtual bool userExists(const QString &username);
-    bool addUser(const QString &username, const QString &password, const QString &role);
-    virtual int findStudentByEmail(const QString &email);
-    virtual bool studentHasUser(int studentId);
-    virtual int addUserReturnId(const QString &username, const QString &password, const QString &role);
-    virtual bool linkStudentWithUser(int studentId, int userId);
-
 private:
     QSqlDatabase db;
-    static QString testDbPath;
+
+    // Helper method for executing queries that return a single scalar value
+    int getScalarValue(const QString &sql);
 };
 
 #endif // DATABASE_H

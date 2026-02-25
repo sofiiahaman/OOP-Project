@@ -1,252 +1,161 @@
 #include "database.h"
 #include <QDir>
 #include <QCoreApplication>
+#include <QSqlError>
+#include <QDebug>
+#include <QDate>
 
 Database::Database() {
-    // Initializing SQLite connection
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    QString path = QCoreApplication::applicationDirPath() + "/library.db";
-    db.setDatabaseName(path);
+    // Initialize SQLite connection
+    if (!QSqlDatabase::contains("qt_sql_default_connection")) {
+        db = QSqlDatabase::addDatabase("QSQLITE");
+        QString path = QCoreApplication::applicationDirPath() + "/library.db";
+        db.setDatabaseName(path);
+    } else {
+        db = QSqlDatabase::database();
+    }
 }
 
 bool Database::openConnection() {
-    qDebug() << "Database path:" << QDir::currentPath();
-
-    if (!db.open()) {
-        qDebug() << "Database open error:" << db.lastError().text();
-        return false;
+    if (!db.isOpen()) {
+        if (!db.open()) {
+            qDebug() << "Database open error:" << db.lastError().text();
+            return false;
+        }
+        qDebug() << "Database connection successful!";
     }
-    qDebug() << "Database connection successful!";
     return true;
 }
 
 void Database::closeConnection() {
-    db.close();
+    if (db.isOpen()) {
+        db.close();
+    }
 }
 
+// --- AUTHENTICATION AND USERS ---
+
 bool Database::checkLogin(const QString& username, const QString& password) {
-    if (!db.isOpen()) {
-        qDebug() << "Database is not open!";
-        return false;
-    }
+    if (!openConnection()) return false;
 
     QSqlQuery query;
-    query.prepare("SELECT * FROM users WHERE username = ? AND password = ?");
-    query.addBindValue(username);
-    query.addBindValue(password);
+    query.prepare("SELECT COUNT(*) FROM users WHERE username = :u AND password = :p");
+    query.bindValue(":u", username);
+    query.bindValue(":p", password);
 
-    if (!query.exec()) {
-        qDebug() << "Query error:" << query.lastError().text();
-        return false;
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt() > 0;
     }
-
-    if (query.next()) {
-        qDebug() << "User login successful:" << username;
-        return true;
-    } else {
-        qDebug() << "No user found with such login or password.";
-    }
-
     return false;
 }
 
 QString Database::getUserRole(const QString &username) {
+    if (!openConnection()) return QString();
+
     QSqlQuery query;
-    query.prepare("SELECT role FROM users WHERE username = ?");
-    query.addBindValue(username);
+    query.prepare("SELECT role FROM users WHERE username = :u");
+    query.bindValue(":u", username);
+
     if (query.exec() && query.next()) {
         return query.value(0).toString();
     }
     return QString();
 }
 
-int Database::getBooksCount() {
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(*) FROM books");
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getAuthorsCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(DISTINCT author) FROM books");
-
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getCategoriesCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(DISTINCT category) FROM books");
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getPublishersCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(DISTINCT publisher) FROM books");
-
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getStudentsCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(*) FROM students");
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getAvailableBooksCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(*) FROM books WHERE available = 1");
-
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getIssuedBooksCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(*) FROM transactions");
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getReturnedBooksCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL;");
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
-int Database::getNotReturnBooksCount()
-{
-    if (!db.isOpen())
-        db.open();
-
-    QSqlQuery query("SELECT COUNT(*) FROM transactions WHERE return_date IS NULL;");
-    if (query.next())
-        return query.value(0).toInt();
-
-    return 0;
-}
-
 bool Database::userExists(const QString &username) {
+    if (!openConnection()) return false;
+
     QSqlQuery query;
     query.prepare("SELECT COUNT(*) FROM users WHERE username = :u");
     query.bindValue(":u", username);
 
-    if (!query.exec()) {
-        qDebug() << "userExists error:" << query.lastError();
-        return false;
-    }
-
-    if (query.next())
-        return query.value(0).toInt() > 0;
-
-    return false;
+    return query.exec() && query.next() && query.value(0).toInt() > 0;
 }
 
-bool Database::addUser(const QString &username, const QString &password, const QString &role) {
+int Database::addUserReturnId(const QString &username, const QString &password, const QString &role) {
+    if (!openConnection()) return -1;
+
     QSqlQuery query;
     query.prepare("INSERT INTO users (username, password, role) VALUES (:u, :p, :r)");
     query.bindValue(":u", username);
     query.bindValue(":p", password);
     query.bindValue(":r", role);
 
-    if (!query.exec()) {
-        qDebug() << "addUser error:" << query.lastError();
-        return false;
-    }
-
-    return true;
-}
-
-int Database::findStudentByEmail(const QString &email)
-{
-    QSqlQuery query;
-    query.prepare("SELECT id FROM students WHERE email = :email");
-    query.bindValue(":email", email);
-
-    if (!query.exec() || !query.next())
-        return -1;
-
-    return query.value(0).toInt();
-}
-
-bool Database::studentHasUser(int studentId)
-{
-    QSqlQuery query;
-    query.prepare("SELECT user_id FROM students WHERE id = :id");
-    query.bindValue(":id", studentId);
-    query.exec();
-
-    if (!query.next()) return false;
-
-    return !query.value(0).isNull();
-}
-
-int Database::addUserReturnId(const QString &username,
-                              const QString &password,
-                              const QString &role)
-{
-    QSqlQuery query;
-    query.prepare("INSERT INTO users (username, password, role) "
-                  "VALUES (:u, :p, :r)");
-    query.bindValue(":u", username);
-    query.bindValue(":p", password);
-    query.bindValue(":r", role);
-
-    if (!query.exec()) {
-        qDebug() << "Add user error:" << query.lastError();
-        return -1;
-    }
+    if (!query.exec()) return -1;
 
     return query.lastInsertId().toInt();
 }
 
+// --- BUSINESS LOGIC: BOOKS AND TRANSACTIONS ---
 
-bool Database::linkStudentWithUser(int studentId, int userId)
-{
+bool Database::addBook(const QString &title, const QString &author, const QString &publisher, const QString &category) {
+    if (!openConnection()) return false;
+
+    QSqlQuery query;
+    query.prepare("INSERT INTO books (title, author, publisher, category, available) "
+                  "VALUES (:t, :a, :p, :c, 1)");
+    query.bindValue(":t", title);
+    query.bindValue(":a", author);
+    query.bindValue(":p", publisher);
+    query.bindValue(":c", category);
+
+    return query.exec();
+}
+
+bool Database::returnBookTransaction(int transactionId, int bookId) {
+    if (!openConnection()) return false;
+
+    db.transaction();
+    QSqlQuery query;
+
+    // 1. Update the return date
+    query.prepare("UPDATE transactions SET return_date = :rd WHERE id = :id");
+    query.bindValue(":rd", QDate::currentDate().toString("yyyy-MM-dd"));
+    query.bindValue(":id", transactionId);
+
+    if(!query.exec()) {
+        db.rollback();
+        return false;
+    }
+
+    // 2. Update the book availability status
+    query.prepare("UPDATE books SET available = 1 WHERE id = :bid");
+    query.bindValue(":bid", bookId);
+
+    if(!query.exec()) {
+        db.rollback();
+        return false;
+    }
+
+    return db.commit();
+}
+
+// --- STUDENTS ---
+
+int Database::findStudentByEmail(const QString &email) {
+    if (!openConnection()) return -1;
+
+    QSqlQuery query;
+    query.prepare("SELECT id FROM students WHERE email = :email");
+    query.bindValue(":email", email);
+
+    if (query.exec() && query.next()) return query.value(0).toInt();
+    return -1;
+}
+
+bool Database::studentHasUser(int studentId) {
+    if (!openConnection()) return false;
+
+    QSqlQuery query;
+    query.prepare("SELECT user_id FROM students WHERE id = :id");
+    query.bindValue(":id", studentId);
+
+    return query.exec() && query.next() && !query.value(0).isNull();
+}
+
+bool Database::linkStudentWithUser(int studentId, int userId) {
+    if (!openConnection()) return false;
+
     QSqlQuery query;
     query.prepare("UPDATE students SET user_id = :uid WHERE id = :sid");
     query.bindValue(":uid", userId);
@@ -255,3 +164,21 @@ bool Database::linkStudentWithUser(int studentId, int userId)
     return query.exec();
 }
 
+// --- STATISTICS ---
+
+int Database::getBooksCount() { return getScalarValue("SELECT COUNT(*) FROM books"); }
+int Database::getAuthorsCount() { return getScalarValue("SELECT COUNT(DISTINCT author) FROM books"); }
+int Database::getCategoriesCount() { return getScalarValue("SELECT COUNT(DISTINCT category) FROM books"); }
+int Database::getPublishersCount() { return getScalarValue("SELECT COUNT(DISTINCT publisher) FROM books"); }
+int Database::getStudentsCount() { return getScalarValue("SELECT COUNT(*) FROM students"); }
+int Database::getAvailableBooksCount() { return getScalarValue("SELECT COUNT(*) FROM books WHERE available = 1"); }
+int Database::getIssuedBooksCount() { return getScalarValue("SELECT COUNT(*) FROM transactions"); }
+int Database::getReturnedBooksCount() { return getScalarValue("SELECT COUNT(*) FROM transactions WHERE return_date IS NOT NULL"); }
+int Database::getNotReturnBooksCount() { return getScalarValue("SELECT COUNT(*) FROM transactions WHERE return_date IS NULL"); }
+
+// Helper method to reduce duplication in statistics
+int Database::getScalarValue(const QString &sql) {
+    if (!openConnection()) return 0;
+    QSqlQuery query(sql);
+    return (query.next()) ? query.value(0).toInt() : 0;
+}
