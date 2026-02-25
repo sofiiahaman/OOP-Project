@@ -2,9 +2,8 @@
 #define RETURNBOOKS_H
 
 #include <QDialog>
-#include <QSqlDatabase>
-#include <QSqlQueryModel>
 #include <QTimer>
+#include <QModelIndex>
 
 namespace Ui {
 class ReturnBooks;
@@ -36,6 +35,7 @@ private slots:
 private:
     Ui::ReturnBooks *ui;
     QTimer *searchTimer;
+    void setupAutocompleter();
 };
 
 #endif // RETURNBOOKS_H
