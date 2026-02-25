@@ -1,22 +1,23 @@
 #ifndef VIEWBOOKSSTUDENT_H
 #define VIEWBOOKSSTUDENT_H
 
-#include <QDialog>
-#include "studentmenu.h"
-#include <QSqlTableModel>
-#include "database.h"
+#include "basebookview.h" // Inherit shared logic
 
 namespace Ui {
 class ViewBooksStudent;
 }
 
-class ViewBooksStudent : public QDialog
+class ViewBooksStudent : public BaseBookView
 {
     Q_OBJECT
 
 public:
     explicit ViewBooksStudent(QWidget *parent = nullptr);
     ~ViewBooksStudent();
+
+protected:
+    // Implementation of student-specific navigation
+    void onGoBack() override;
 
 private slots:
     void on_goBackButton_clicked();
@@ -25,8 +26,7 @@ private slots:
 
 private:
     Ui::ViewBooksStudent *ui;
-    QSqlTableModel *model;
-    void loadBooks();
+    // The model and loadBooks were removed — they are now in the base class
 };
 
 #endif // VIEWBOOKSSTUDENT_H

@@ -1,18 +1,30 @@
 #include "viewbooks.h"
 #include "ui_viewbooks.h"
 #include "adminmenu.h"
-#include <QMessageBox>
 #include <QHeaderView>
 
 ViewBooks::ViewBooks(QWidget *parent)
-    : QDialog(parent)
+    : BaseBookView(parent) // Call the base class constructor
     , ui(new Ui::ViewBooks)
-    , model(nullptr)
 {
     ui->setupUi(this);
-    loadBooks(); // immediately show all books
 
+    // 1. Configure icons
     ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
+
+    // 2. Initialize the model via the base class
+    initTableModel("books");
+
+    // 3. Connect the model to the table and configure its appearance
+    ui->tableView->setModel(model);
+    setupTableAppearance();
+
+    // 4. Configure table parameters specific to this window
+    ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    // Load initial data
+    model->select();
 }
 
 ViewBooks::~ViewBooks()
@@ -20,114 +32,50 @@ ViewBooks::~ViewBooks()
     delete ui;
 }
 
-void ViewBooks::on_goBackButton_clicked()
+/* ========================
+ * Implementation of the virtual navigation method
+ * ======================== */
+void ViewBooks::onGoBack()
 {
     AdminMenu *adminMenu = new AdminMenu();
     adminMenu->show();
     this->close();
 }
 
-void ViewBooks::loadBooks()
+/* ========================
+ * UI event handling
+ * ======================== */
+
+void ViewBooks::on_goBackButton_clicked()
 {
-    Database db;
-    if (!db.openConnection()) {
-        QMessageBox::critical(this, "Error", "Failed to connect to the database!");
-        return;
-    }
-
-    if (!model) {
-        model = new QSqlTableModel(this);
-        model->setTable("books");
-    }
-
-    QString filter = "";
-
-    // Get values from search fields
-    QString title = ui->searchBookLineEdit->text().trimmed();
-    QString author = ui->authorLineEdit->text().trimmed();
-    QString publisher = ui->publisherLineEdit->text().trimmed();
-    QString id = ui->idLineEdit->text().trimmed();
-    QString genre = ui->categoryComboBox->currentText().trimmed();
-    bool available = ui->availableCheckBox->isChecked();
-
-    // Build filter
-    if (!title.isEmpty()) {
-        filter += QString("title LIKE '%%1%'").arg(title);
-    }
-    if (!author.isEmpty()) {
-        if (!filter.isEmpty()) filter += " AND ";
-        filter += QString("author LIKE '%%1%'").arg(author);
-    }
-    if (!publisher.isEmpty()) {
-        if (!filter.isEmpty()) filter += " AND ";
-        filter += QString("publisher LIKE '%%1%'").arg(publisher);
-    }
-    if (!id.isEmpty()) {
-        if (!filter.isEmpty()) filter += " AND ";
-        filter += QString("id = '%1'").arg(id);
-    }
-    if (!genre.isEmpty() && genre != "Choose category") {
-        if (!filter.isEmpty()) filter += " AND ";
-        filter += QString("category = '%1'").arg(genre);
-    }
-    if (available) {
-        if (!filter.isEmpty()) filter += " AND ";
-        filter += "available = 1";
-    }
-
-    // Apply filter if exists
-    if (!filter.isEmpty()) {
-        model->setFilter(filter);
-    } else {
-        model->setFilter(""); // show all books
-    }
-
-    model->select();
-
-    model->setHeaderData(0, Qt::Horizontal, "ID");
-    model->setHeaderData(1, Qt::Horizontal, "Назва книги");
-    model->setHeaderData(2, Qt::Horizontal, "Автор");
-    model->setHeaderData(3, Qt::Horizontal, "Видавництво");
-    model->setHeaderData(4, Qt::Horizontal, "Жанр");
-    model->setHeaderData(5, Qt::Horizontal, "Доступна");
-
-    ui->tableView->setModel(model);
-
-    // Auto-adjust columns
-    ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-
-    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-
-    // Scrollbars
-    ui->tableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-
-    db.closeConnection();
+    onGoBack();
 }
-
 
 void ViewBooks::on_searchButton_clicked()
 {
-    loadBooks();
+    // Collect search parameters into a structure (defined in basebookview.h)
+    BookSearchParams params;
+    params.title = ui->searchBookLineEdit->text().trimmed();
+    params.author = ui->authorLineEdit->text().trimmed();
+    params.publisher = ui->publisherLineEdit->text().trimmed();
+    params.id = ui->idLineEdit->text().trimmed();
+    params.category = ui->categoryComboBox->currentText();
+    params.availableOnly = ui->availableCheckBox->isChecked();
+
+    // Call the unified filtering method from the base class
+    applySearchFilter(params);
 }
 
 void ViewBooks::on_clearButton_clicked()
 {
-    // Clear all fields
+    // Clear UI fields
     ui->searchBookLineEdit->clear();
     ui->authorLineEdit->clear();
     ui->publisherLineEdit->clear();
     ui->idLineEdit->clear();
-
-    // Reset category to default
     ui->categoryComboBox->setCurrentIndex(0);
-
-    // Uncheck availability checkbox
     ui->availableCheckBox->setChecked(false);
 
-    // Refresh table without filters
-    loadBooks();
+    // Reset the filter via the base class
+    applySearchFilter(BookSearchParams());
 }
-
-
