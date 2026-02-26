@@ -19,7 +19,6 @@ void BaseBookView::initTableModel(const QString &tableName) {
 void BaseBookView::setupTableAppearance() {
     if (!model) return;
 
-    // Спільні назви колонок (DRY усунено)
     model->setHeaderData(0, Qt::Horizontal, "ID");
     model->setHeaderData(1, Qt::Horizontal, "Назва книги");
     model->setHeaderData(2, Qt::Horizontal, "Автор");

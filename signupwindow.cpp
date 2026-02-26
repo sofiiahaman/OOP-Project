@@ -73,7 +73,7 @@ void SignupWindow::on_signupButton_clicked()
     if (error.isEmpty()) {
         QMessageBox::information(this, "Success", "Account created successfully!");
         emit signupSuccessful("student");
-        this->close(); // Закриваємо тільки при успіху
+        this->close();
     } else {
         QMessageBox::warning(this, "Error", error);
     }

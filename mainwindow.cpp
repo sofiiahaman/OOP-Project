@@ -55,7 +55,7 @@ void MainWindow::on_signupOptionButton_clicked()
 {
     SignupWindow *signup = new SignupWindow();
 
-   // When a student registers
+    // When a student registers
     connect(signup, &SignupWindow::signupSuccessful, this,
             [this](QString role){
                 if (role == "student") {
