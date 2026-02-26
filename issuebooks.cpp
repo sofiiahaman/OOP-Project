@@ -138,7 +138,7 @@ void IssueBooks::on_issueBookButton_clicked()
     StudentRepository studentRepo(database);
     TransactionRepository transactionRepo(database);
 
-    // 1️⃣ Get student ID
+    // Get student ID
     int studentId = studentRepo.findStudentByName(studentName);
 
     if (studentId == -1) {
@@ -148,8 +148,8 @@ void IssueBooks::on_issueBookButton_clicked()
         return;
     }
 
-    // 2️⃣ Issue via repository
-    if (!transactionRepo.issueBook(studentId, bookId, issueDate)) {
+    //  Issue via repository
+    if (!transactionRepo.addTransaction(studentId, bookId, issueDate)) {
         QMessageBox::warning(this,
                              "Error",
                              "Failed to issue book or book unavailable.");
@@ -172,10 +172,8 @@ void IssueBooks::on_goBackButton_clicked()
 {
     this->close();
 
-#ifndef UNIT_TEST
     AdminMenu *adminMenu = new AdminMenu();
     adminMenu->show();
-#endif
 }
 
 void IssueBooks::clearFields()

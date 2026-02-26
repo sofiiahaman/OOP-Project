@@ -5,6 +5,7 @@
 #include "database.h"
 #include "repositories/StudentRepository.h"
 #include "repositories/TransactionRepository.h"
+#include "services/booktransactionservice.h"
 
 #include <QMessageBox>
 #include <QCompleter>
@@ -135,23 +136,15 @@ void ReturnBooks::onReturnClicked()
     int transactionId = ui->issueIDLineEdit->text().toInt();
 
     Database database;
-    TransactionRepository repo(database);
+    BookTransactionService service(database);
 
-    if (repo.returnBook(transactionId)) {
-
-        QMessageBox::information(this,
-                                 "Success",
-                                 "The book has been successfully returned!");
-
+    if (service.returnBook(transactionId)) {
+        QMessageBox::information(this, "Success", "The book has been successfully returned!");
         clearFields();
-
-        loadTransactionsByStudent(
-            ui->studentNameLineEdit->text());
+        loadTransactionsByStudent(ui->studentNameLineEdit->text());
     }
     else {
-        QMessageBox::critical(this,
-                              "Error",
-                              "Failed to process the return.");
+        QMessageBox::critical(this, "Error", "Failed to process the return.");
     }
 }
 

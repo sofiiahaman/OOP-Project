@@ -3,18 +3,20 @@
 
 #include <QSqlQueryModel>
 #include <QSqlQuery>
+#include <QString>
 
 class Database;
 
 class TransactionRepository
 {
 public:
-    TransactionRepository(Database& database);
+    explicit TransactionRepository(Database& database);
 
-    bool issueBook(int studentId,
-                   int bookId,
-                   const QString& issueDate);
-    bool returnBook(int transactionId);
+    bool addTransaction(int studentId, int bookId, const QString& issueDate);
+
+    bool markAsReturned(int transactionId);
+
+    int getBookIdByTransaction(int transactionId);
 
     QSqlQueryModel* getStudentBooks(int studentId);
 
@@ -24,4 +26,4 @@ private:
     Database& db;
 };
 
-#endif
+#endif // TRANSACTIONREPOSITORY_H
