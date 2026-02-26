@@ -1,14 +1,13 @@
 #include "loginwindow.h"
 #include "ui_loginwindow.h"
+#include "mainwindow.h"
+#include "studentmenu.h"
+#include "database.h"
+#include "repositories/UserRepository.h"
+#include "services/AuthService.h"
 
 #include <QMessageBox>
 #include <QPixmap>
-
-#include "mainwindow.h"
-#include "studentmenu.h"
-
-#include "database.h"
-#include "./repositories/UserRepository.h"
 
 LoginWindow::LoginWindow(QWidget *parent)
     : QDialog(parent)
@@ -48,27 +47,22 @@ void LoginWindow::on_loginButton_clicked()
     }
 
     Database database;
-    UserRepository repo(database);
+    AuthService service(database);
 
-    if (repo.checkLogin(username, password)) {
+    QString role = service.login(username, password);
 
-        QString role = repo.getUserRole(username);
-
+    if (!role.isEmpty()) {
         if (role == "student") {
-
 #ifndef UNIT_TEST
             StudentMenu *studentMenu = new StudentMenu();
             studentMenu->show();
 #endif
-
             this->close();
-        }
-        else {
+        } else {
             emit loginSuccessful(role);
             this->close();
         }
-    }
-    else {
+    } else {
         QMessageBox::warning(this, "Error", "Incorrect username or password!");
     }
 }

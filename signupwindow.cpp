@@ -3,8 +3,9 @@
 
 #include "mainwindow.h"
 #include "database.h"
-#include "./repositories/StudentRepository.h"
-#include "./repositories/UserRepository.h"
+#include "repositories/StudentRepository.h"
+#include "repositories/UserRepository.h"
+#include "services/AuthService.h"
 
 #include <QMessageBox>
 #include <QPixmap>
@@ -65,53 +66,17 @@ void SignupWindow::on_signupButton_clicked()
     }
 
     Database database;
-    StudentRepository studentRepo(database);
-    UserRepository userRepo(database);
+    AuthService service(database);
 
-    // Check student by email
-    int studentId = studentRepo.findStudentByEmail(email);
+    QString error = service.registerExistingStudent(email, username, password);
 
-    if (studentId == -1) {
-        QMessageBox::warning(this, "Error",
-                             "This email is not registered. "
-                             "Please contact the administrator.");
-        return;
+    if (error.isEmpty()) {
+        QMessageBox::information(this, "Success", "Account created successfully!");
+        emit signupSuccessful("student");
+        this->close(); // Закриваємо тільки при успіху
+    } else {
+        QMessageBox::warning(this, "Error", error);
     }
-
-    // Check if already linked
-    if (studentRepo.studentHasUser(studentId)) {
-        QMessageBox::warning(this, "Error",
-                             "This student already has an account!");
-        return;
-    }
-
-    // Check username uniqueness
-    if (userRepo.userExists(username)) {
-        QMessageBox::warning(this, "Error", "User already exists!");
-        return;
-    }
-
-    // Create user
-    int newUserId = userRepo.addUserReturnId(username, password, "student");
-
-    if (newUserId == -1) {
-        QMessageBox::critical(this, "Error", "Failed to create account!");
-        return;
-    }
-
-    // Link student with user
-    if (!userRepo.linkStudentWithUser(studentId, newUserId)) {
-        QMessageBox::critical(this, "Error",
-                              "Failed to link student to account!");
-        return;
-    }
-
-    QMessageBox::information(this, "Success",
-                             "Account created successfully!");
-
-    emit signupSuccessful("student");
-
-    this->close();
 }
 
 
