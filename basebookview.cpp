@@ -1,4 +1,5 @@
 #include "basebookview.h"
+#include "services/LibraryService.h"
 #include <QHeaderView>
 #include <QMessageBox>
 
@@ -30,21 +31,11 @@ void BaseBookView::setupTableAppearance() {
 }
 
 void BaseBookView::applySearchFilter(const BookSearchParams &params) {
-    QStringList filters;
+    Database db;
+    LibraryService service(db);
 
-    if (!params.title.isEmpty())
-        filters << QString("title LIKE '%%1%'").arg(params.title);
-    if (!params.author.isEmpty())
-        filters << QString("author LIKE '%%1%'").arg(params.author);
-    if (!params.publisher.isEmpty())
-        filters << QString("publisher LIKE '%%1%'").arg(params.publisher);
-    if (!params.id.isEmpty())
-        filters << QString("id = '%1'").arg(params.id);
-    if (!params.category.isEmpty() && params.category != "Choose category")
-        filters << QString("category = '%1'").arg(params.category);
-    if (params.availableOnly)
-        filters << "available = 1";
+    QString filter = service.buildFilterString(params);
 
-    model->setFilter(filters.join(" AND "));
+    model->setFilter(filter);
     model->select();
 }

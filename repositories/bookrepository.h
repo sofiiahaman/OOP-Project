@@ -19,6 +19,10 @@ public:
 
     bool updateBookAvailability(int bookId, bool available);
 
+    QSqlQueryModel* searchByAny(const QString& searchTerm);
+    QSqlQueryModel* searchWithCategory(const QString& searchTerm, const QString& category);
+    QStringList getUniqueCategories();
+
 private:
     Database& db;
 };

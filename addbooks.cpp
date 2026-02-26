@@ -3,6 +3,7 @@
 #include "adminmenu.h"
 
 #include "./repositories/BookRepository.h"
+#include "services/libraryservice.h"
 #include "database.h"
 
 #include <QMessageBox>
@@ -28,21 +29,10 @@ AddBooks::~AddBooks()
 void AddBooks::loadCategoryHints()
 {
     Database database;
-    BookRepository repo(database);
+    LibraryService service(database);
+    QStringList categories = service.getAllCategories();
 
-    QSqlQueryModel* model = repo.getAllBooks();
-    if (!model)
-        return;
-
-    QStringList categories;
-
-    for (int i = 0; i < model->rowCount(); ++i) {
-        QString category = model->record(i).value("category").toString();
-        if (!categories.contains(category))
-            categories << category;
-    }
-
-    delete model;
+    if (categories.isEmpty()) return;
 
     QCompleter *completer = new QCompleter(categories, this);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
@@ -52,35 +42,16 @@ void AddBooks::loadCategoryHints()
     ui->bookCategoryLineEdit->setCompleter(completer);
 }
 
-void AddBooks::on_saveButton_clicked()
-{
-    // UI validation
-    QString title = ui->bookNameLineEdit->text().trimmed();
-    QString author = ui->bookAuthorLineEdit->text().trimmed();
-    QString publisher = ui->bookPublisherLineEdit->text().trimmed();
-    QString category = ui->bookCategoryLineEdit->text().trimmed();
+void AddBooks::on_saveButton_clicked() {
+    Database db;
+    LibraryService service(db);
 
-    if (title.isEmpty() || author.isEmpty() ||
-        publisher.isEmpty() || category.isEmpty())
-    {
-        QMessageBox::warning(this, "Error", "Please fill in all fields!");
-        return;
-    }
-
-    // Repository call
-    Database database;
-    BookRepository repo(database);
-
-    bool success = repo.addBook(title, author, publisher, category);
-
-    if (success) {
-        QMessageBox::information(this, "Success",
-                                 "The book was successfully added!");
+    if (service.addNewBook(ui->bookNameLineEdit->text(), ui->bookAuthorLineEdit->text(),
+                           ui->bookPublisherLineEdit->text(), ui->bookCategoryLineEdit->text())) {
+        QMessageBox::information(this, "Success", "Book added!");
         clearFields();
-        loadCategoryHints(); // refresh hints
     } else {
-        QMessageBox::critical(this, "Error",
-                              "Failed to add the book to the database.");
+        QMessageBox::warning(this, "Error", "Invalid data!");
     }
 }
 

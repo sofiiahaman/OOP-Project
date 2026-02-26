@@ -66,3 +66,33 @@ bool BookRepository::updateBookAvailability(int bookId, bool available)
 
     return true;
 }
+
+QSqlQueryModel* BookRepository::searchByAny(const QString& searchTerm) {
+    QSqlQueryModel* model = new QSqlQueryModel();
+    QSqlQuery query(db.getDb());
+    query.prepare("SELECT * FROM books WHERE title LIKE :term OR author LIKE :term");
+    query.bindValue(":term", "%" + searchTerm + "%");
+    query.exec();
+    model->setQuery(query);
+    return model;
+}
+
+QSqlQueryModel* BookRepository::searchWithCategory(const QString& searchTerm, const QString& category) {
+    QSqlQueryModel* model = new QSqlQueryModel();
+    QSqlQuery query(db.getDb());
+    query.prepare("SELECT * FROM books WHERE (title LIKE :term OR author LIKE :term) AND category = :cat");
+    query.bindValue(":term", "%" + searchTerm + "%");
+    query.bindValue(":cat", category);
+    query.exec();
+    model->setQuery(query);
+    return model;
+}
+
+QStringList BookRepository::getUniqueCategories() {
+    QStringList categories;
+    QSqlQuery query("SELECT DISTINCT category FROM books", db.getDb());
+    while (query.next()) {
+        categories << query.value(0).toString();
+    }
+    return categories;
+}
