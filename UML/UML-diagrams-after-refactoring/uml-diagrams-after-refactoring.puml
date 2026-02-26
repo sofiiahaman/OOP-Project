@@ -1,0 +1,1284 @@
+' Class diagram
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+
+package "Core & Data" {
+    class Database {
+        - db : QSqlDatabase
+        + Database()
+        + openConnection() : bool
+        + closeConnection() : void
+        + getDb() : QSqlDatabase&
+    }
+
+    struct BookSearchParams {
+        + title : QString
+        + author : QString
+        + publisher : QString
+        + id : QString
+        + category : QString
+        + availableOnly : bool
+    }
+
+    package "Repositories" {
+        class BookRepository {
+            - db : Database&
+            + addBook(...) : bool
+        }
+        class StudentRepository {
+            - db : Database&
+            + findStudentByEmail(...) : int
+        }
+        class UserRepository {
+            - db : Database&
+            + checkLogin(...) : bool
+        }
+        class TransactionRepository {
+            - db : Database&
+        }
+    }
+}
+
+package "Service Layer" {
+    class AuthService {
+        - m_db : Database&
+        - m_userRepo : UserRepository
+        - m_studentRepo : StudentRepository
+        + login(username, password) : QString
+        + registerExistingStudent(email, username, password) : QString
+    }
+
+    class BookTransactionService {
+        - m_db : Database&
+        - m_studentRepo : StudentRepository
+        - m_bookRepo : BookRepository
+        - m_transRepo : TransactionRepository
+        + issueBook(studentName, bookId, date) : bool
+        + returnBook(transactionId) : bool
+    }
+
+    class LibraryService {
+        - m_db : Database&
+        - m_bookRepo : BookRepository
+        + addNewBook(...) : bool
+        + searchBooks(...) : QSqlQueryModel*
+        + buildFilterString(params : BookSearchParams) : QString
+    }
+}
+
+package "UI Layer" {
+    class MainWindow {
+        - db : Database
+        - onUserLoggedIn(role : QString)
+    }
+
+    class LoginWindow {
+        + signupSuccessful(role : QString) <<signal>>
+    }
+
+    class SignupWindow {
+        + signupSuccessful(role : QString) <<signal>>
+    }
+
+    class AdminMenu
+    class StudentMenu {
+        - ui : Ui::StudentMenu*
+        # paintEvent(event : QPaintEvent*)
+    }
+
+    abstract class BaseBookView {
+        # model : QSqlTableModel*
+        # initTableModel(tableName : QString)
+        # applySearchFilter(params : BookSearchParams)
+        # {abstract} onGoBack()
+    }
+
+    class ViewBooks {
+        - ui : Ui::ViewBooks*
+        # onGoBack() override
+    }
+
+    class ViewBooksStudent {
+        - ui : Ui::ViewBooksStudent*
+        # onGoBack() override
+    }
+
+    class ViewStudentInformation {
+        - model : QSqlTableModel*
+        - loadStudentData(filter : QString)
+    }
+}
+
+' Inheritance
+BaseBookView <|-- ViewBooks
+BaseBookView <|-- ViewBooksStudent
+
+' Service -> Repository Relations
+AuthService *-- UserRepository
+AuthService *-- StudentRepository
+BookTransactionService *-- StudentRepository
+BookTransactionService *-- BookRepository
+BookTransactionService *-- TransactionRepository
+LibraryService *-- BookRepository
+
+' UI -> Service Relations
+LoginWindow ..> AuthService : uses
+SignupWindow ..> AuthService : uses
+AdminMenu ..> BookTransactionService : uses
+AdminMenu ..> LibraryService : uses
+
+' UI Flow
+MainWindow ..> LoginWindow
+MainWindow ..> SignupWindow
+AdminMenu ..> ViewBooks
+StudentMenu ..> ViewBooksStudent
+
+@enduml
+
+' Activity diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+
+title Activity Diagram: Complete Library Management System
+
+start
+
+:Start Application (MainWindow);
+:Database::openConnection();
+
+if (Connection successful?) then (yes)
+
+    :Display Main Screen;
+
+    if (Select option?) then (Login)
+
+        :Open LoginWindow;
+        :Enter username & password;
+        :AuthService::login();
+
+        if (Role returned?) then (yes)
+            :Emit loginSuccessful(role);
+        else (no)
+            :Show login error;
+            stop
+        endif
+
+    else (Signup)
+
+        :Open SignupWindow;
+        :Enter email, username, password;
+        :AuthService::registerExistingStudent();
+        :Emit signupSuccessful("Student");
+
+    endif
+
+
+    if (Role == "Admin") then (Administrator)
+
+        :Open AdminMenu;
+        :loadDashboardStats();
+        :StatisticsRepository executes count queries;
+
+        repeat
+        if (Choose action?) then (Add Book)
+
+            :Open AddBooks dialog;
+            :Enter book data;
+            :LibraryService::addNewBook();
+            :BookRepository::addBook();
+
+        elseif (View Books)
+
+            :Open ViewBooks;
+            :BaseBookView::initTableModel("books");
+            :Enter search parameters;
+            :LibraryService::buildFilterString();
+            :BaseBookView::applySearchFilter();
+
+        elseif (Add Student)
+
+            :Open AddStudents;
+            :StudentRepository::addStudent();
+
+        elseif (View Student Info)
+
+            :Open ViewStudentInformation;
+            :Load QSqlTableModel;
+            :Display students;
+
+        elseif (Edit Student)
+
+            :Open EditStudentInformation;
+            :Load students;
+            :Select student;
+            :StudentRepository::updateStudent();
+
+        elseif (Issue Book)
+
+            :Open IssueBooks;
+            :Enter student name & book;
+            :BookTransactionService::issueBook();
+            :TransactionRepository::addTransaction();
+            :BookRepository::updateBookAvailability(false);
+
+        elseif (Return Book)
+
+            :Open ReturnBooks;
+            :Select transaction;
+            :BookTransactionService::returnBook();
+            :TransactionRepository::markAsReturned();
+            :BookRepository::updateBookAvailability(true);
+
+        elseif (Logout)
+
+            :Open LogoutDialog;
+            break
+
+        endif
+        repeat while (Continue working?) is (yes)
+
+        :Close AdminMenu;
+        stop
+
+    else (Student)
+
+        :Open StudentMenu;
+
+        repeat
+        if (Select action?) then (View Books)
+
+            :Open ViewBooksStudent;
+            :BaseBookView::initTableModel("books");
+            :Set availableOnly = true;
+            :Enter search parameters;
+            :LibraryService::buildFilterString();
+            :applySearchFilter();
+
+        elseif (Logout)
+
+            break
+
+        endif
+        repeat while (Continue?) is (yes)
+
+        :Close StudentMenu;
+        stop
+
+    endif
+
+else (no)
+    :Show database connection error;
+    stop
+endif
+
+:Database::closeConnection();
+stop
+
+@enduml
+
+' Communication diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+' Objects (Participants)
+node "ui : AdminMenu" as UI
+node "service : BookTransactionService" as Service
+node "db : Database" as DB
+node "studRepo : StudentRepository" as StudRepo
+node "bookRepo : BookRepository" as BookRepo
+node "transRepo : TransactionRepository" as TransRepo
+
+' Interactions with step numbering
+UI -right-> Service : 1: issueBook(studName, bookId, date)
+Service -down-> DB : 2: getDb()
+
+Service -down-> StudRepo : 3: findStudentByName(studName)
+StudRepo .up.> Service : 4: studentId
+
+Service -down-> BookRepo : 5: updateBookAvailability(bookId, false)
+BookRepo .up.> Service : 6: success_status
+
+Service -down-> TransRepo : 7: addTransaction(studentId, bookId, date)
+TransRepo .up.> Service : 8: transaction_id
+
+Service .left.> UI : 9: return result (bool)
+
+note bottom of Service
+  Business logic:
+  Coordinates the work of
+  three repositories
+end note
+
+@enduml
+
+' Component diagram
+@startuml
+skinparam componentStyle uml2
+skinparam monochrome true
+skinparam shadowing false
+
+title Component Diagram: Library Management System
+
+package "User Interface (Binaries/Forms)" {
+    [Main Application Window] as Main
+    [Admin Dashboard] as AdminUI
+    [Student Portal] as StudentUI
+    [Auth Dialogs] as AuthUI
+    [Book Management Views] as BookUI
+}
+
+package "Business Logic (Services)" {
+    component [AuthService] as AuthService
+    component [BookTransactionService] as TransService
+    component [LibraryService] as LibService
+}
+
+package "Data Access Layer (Repositories)" {
+    component [UserRepository] as UserRepo
+    component [StudentRepository] as StudRepo
+    component [BookRepository] as BookRepo
+    component [TransactionRepository] as TransRepo
+    component [StatisticsRepository] as StatRepo
+}
+
+database "SQLite Database" {
+    [Tables / SQL] as DB_Engine
+}
+
+' Relationships: UI to Services
+AuthUI ..> AuthService : use
+Main ..> AuthService : use
+AdminUI ..> TransService : use
+AdminUI ..> LibService : use
+StudentUI ..> LibService : use
+BookUI ..> LibService : use
+
+' Relationships: Services to Repositories
+AuthService --> UserRepo
+AuthService --> StudRepo
+
+TransService --> StudRepo
+TransService --> BookRepo
+TransService --> TransRepo
+
+LibService --> BookRepo
+
+' Relationships: Repositories to DB
+UserRepo --> DB_Engine
+StudRepo --> DB_Engine
+BookRepo --> DB_Engine
+TransRepo --> DB_Engine
+StatRepo --> DB_Engine
+
+note right of DB_Engine
+  Використовується QSqlDatabase 
+  через клас Database
+end note
+
+@enduml
+
+
+' Composite structure diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+title Composite Structure Diagram: Library Management System
+
+
+' =======================
+' SYSTEM CONTAINER
+' =======================
+package "Library Management System" {
+
+    ' =======================
+    ' UI LAYER
+    ' =======================
+    package "UI Layer" {
+
+        class MainWindow
+        class LoginWindow
+        class SignupWindow
+        class AdminMenu
+        class StudentMenu
+
+        class AddBooks
+        class AddStudents
+        class EditStudentInformation
+        class ViewStudentInformation
+
+        abstract class BaseBookView
+        class ViewBooks
+        class ViewBooksStudent
+
+        class IssueBooks
+        class ReturnBooks
+        class LogoutDialog
+    }
+
+    ' =======================
+    ' SERVICE LAYER
+    ' =======================
+    package "Service Layer" {
+
+        class AuthService
+        class LibraryService
+        class BookTransactionService
+    }
+
+    ' =======================
+    ' REPOSITORY LAYER
+    ' =======================
+    package "Repository Layer" {
+
+        class UserRepository
+        class StudentRepository
+        class BookRepository
+        class TransactionRepository
+        class StatisticsRepository
+    }
+
+    ' =======================
+    ' DATABASE
+    ' =======================
+    class Database
+}
+
+' ==================================================
+' UI → SERVICE CONNECTIONS (Required Interfaces)
+' ==================================================
+LoginWindow --> AuthService
+SignupWindow --> AuthService
+
+AdminMenu --> LibraryService
+AdminMenu --> BookTransactionService
+AdminMenu --> StatisticsRepository
+
+IssueBooks --> BookTransactionService
+ReturnBooks --> BookTransactionService
+
+ViewBooks --> LibraryService
+ViewBooksStudent --> LibraryService
+
+EditStudentInformation --> StudentRepository
+AddStudents --> StudentRepository
+AddBooks --> LibraryService
+
+MainWindow --> AuthService
+
+' ==================================================
+' SERVICE → REPOSITORY CONNECTIONS
+' ==================================================
+AuthService --> UserRepository
+AuthService --> StudentRepository
+
+LibraryService --> BookRepository
+
+BookTransactionService --> StudentRepository
+BookTransactionService --> BookRepository
+BookTransactionService --> TransactionRepository
+
+' ==================================================
+' REPOSITORY → DATABASE CONNECTION
+' ==================================================
+UserRepository --> Database
+StudentRepository --> Database
+BookRepository --> Database
+TransactionRepository --> Database
+StatisticsRepository --> Database
+
+' ==================================================
+' INHERITANCE
+' ==================================================
+BaseBookView <|-- ViewBooks
+BaseBookView <|-- ViewBooksStudent
+
+@enduml
+
+' Deployment diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+
+title Deployment Diagram: Library Management System
+
+
+' =========================
+' CLIENT MACHINE
+' =========================
+node "Client Device\n(Windows / Linux PC)" {
+
+    node "Qt Runtime Environment" {
+
+        artifact "LibraryManagementSystem.exe" {
+            component MainWindow
+            component LoginWindow
+            component SignupWindow
+            component AdminMenu
+            component StudentMenu
+            
+            component ViewBooks
+            component ViewBooksStudent
+            component IssueBooks
+            component ReturnBooks
+            component EditStudentInformation
+            
+            component AuthService
+            component LibraryService
+            component BookTransactionService
+            
+            component UserRepository
+            component StudentRepository
+            component BookRepository
+            component TransactionRepository
+            component StatisticsRepository
+        }
+    }
+}
+
+' =========================
+' DATABASE SERVER
+' =========================
+node "Database Server" {
+
+    node "SQL Database Engine\n(MySQL / PostgreSQL / SQLite)" {
+
+        database "LibraryDB" {
+            artifact "Users Table"
+            artifact "Students Table"
+            artifact "Books Table"
+            artifact "Transactions Table"
+            artifact "Categories Table"
+            artifact "Publishers Table"
+        }
+    }
+}
+
+' =========================
+' CONNECTION
+' =========================
+"LibraryManagementSystem.exe" --> "LibraryDB" : SQL Connection\n(QSqlDatabase)
+
+@enduml
+
+' Object diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+
+title Object Diagram: Runtime Snapshot (Admin Session)
+
+' Екземпляр бази даних
+object "dbInstance : Database" as DB {
+    dbName = "library.db"
+    isOpen = true
+}
+
+' Екземпляри репозиторіїв (синглтони або передані по посиланню)
+object "bookRepo : BookRepository" as BR {
+    db = &dbInstance
+}
+
+object "studRepo : StudentRepository" as SR {
+    db = &dbInstance
+}
+
+object "userRepo : UserRepository" as UR {
+    db = &dbInstance
+}
+
+' Екземпляри сервісів
+object "authService : AuthService" as AS {
+    m_db = &dbInstance
+    m_userRepo = &userRepo
+    m_studentRepo = &studRepo
+}
+
+object "libService : LibraryService" as LS {
+    m_db = &dbInstance
+    m_bookRepo = &bookRepo
+}
+
+' Екземпляри UI
+object "mainWindow : MainWindow" as MW {
+    ui = <pointer>
+    db = dbInstance
+}
+
+object "adminMenu : AdminMenu" as AM {
+    ui = <pointer>
+    db = dbInstance
+}
+
+object "currentSearch : BookSearchParams" as BSP {
+    title = "Clean Code"
+    author = "Robert Martin"
+    category = "Programming"
+    availableOnly = true
+}
+
+' Зв'язки між об'єктами
+MW *-- AM : "creates/owns"
+AM ..> LS : "calls methods"
+LS *-- BR : "uses"
+AS *-- UR : "uses"
+AS *-- SR : "uses"
+
+BR --> DB : "queries"
+SR --> DB : "queries"
+UR --> DB : "queries"
+
+AM ..> BSP : "fills data"
+
+note right of AM
+  Стан: Адміністратор шукає 
+  книгу "Clean Code"
+end note
+
+@enduml
+
+
+' Package diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Package Diagram: Library Management System
+
+
+' =====================================================
+' ROOT SYSTEM
+' =====================================================
+package "Library Management System" {
+
+    ' ==========================
+    ' UI PACKAGE
+    ' ==========================
+    package "ui" {
+
+        package "core" {
+            class MainWindow
+            class LoginWindow
+            class SignupWindow
+            class AdminMenu
+            class StudentMenu
+            class LogoutDialog
+        }
+
+        package "books" {
+            abstract class BaseBookView
+            class ViewBooks
+            class ViewBooksStudent
+            class AddBooks
+            class IssueBooks
+            class ReturnBooks
+        }
+
+        package "students" {
+            class AddStudents
+            class EditStudentInformation
+            class ViewStudentInformation
+        }
+    }
+
+
+    ' ==========================
+    ' SERVICE PACKAGE
+    ' ==========================
+    package "services" {
+        class AuthService
+        class LibraryService
+        class BookTransactionService
+    }
+
+
+    ' ==========================
+    ' REPOSITORY PACKAGE
+    ' ==========================
+    package "repositories" {
+        class UserRepository
+        class StudentRepository
+        class BookRepository
+        class TransactionRepository
+        class StatisticsRepository
+    }
+
+
+    ' ==========================
+    ' DATABASE PACKAGE
+    ' ==========================
+    package "database" {
+        class Database
+    }
+}
+
+
+' =====================================================
+' DEPENDENCIES BETWEEN PACKAGES
+' =====================================================
+
+ui ..> services
+ui ..> repositories
+services ..> repositories
+repositories ..> database
+
+@enduml
+
+
+' Sequence diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+
+title Sequence Diagram: Library Management System
+
+
+actor User
+
+participant MainWindow
+participant LoginWindow
+participant SignupWindow
+participant AdminMenu
+participant StudentMenu
+
+participant AuthService
+participant LibraryService
+participant BookTransactionService
+
+participant UserRepository
+participant StudentRepository
+participant BookRepository
+participant TransactionRepository
+participant StatisticsRepository
+
+participant Database
+
+
+' =====================================================
+' LOGIN FLOW
+' =====================================================
+
+User -> MainWindow : Start Application
+MainWindow -> Database : openConnection()
+
+User -> LoginWindow : Enter credentials
+LoginWindow -> AuthService : login(username,password)
+AuthService -> UserRepository : checkLogin()
+UserRepository -> Database : SELECT user
+UserRepository --> AuthService : valid/invalid
+AuthService -> UserRepository : getUserRole()
+UserRepository -> Database : SELECT role
+AuthService --> LoginWindow : return role
+LoginWindow --> MainWindow : loginSuccessful(role)
+
+
+' =====================================================
+' SIGNUP FLOW
+' =====================================================
+
+User -> SignupWindow : Enter email/username/password
+SignupWindow -> AuthService : registerExistingStudent()
+AuthService -> StudentRepository : findStudentByEmail()
+StudentRepository -> Database : SELECT student
+AuthService -> UserRepository : addUserReturnId()
+UserRepository -> Database : INSERT user
+AuthService -> UserRepository : linkStudentWithUser()
+UserRepository -> Database : UPDATE student_user_link
+SignupWindow --> MainWindow : signupSuccessful("Student")
+
+
+' =====================================================
+' ADMIN - ISSUE BOOK
+' =====================================================
+
+User -> AdminMenu : Issue Book
+AdminMenu -> BookTransactionService : issueBook(name,bookId,date)
+
+BookTransactionService -> StudentRepository : findStudentByName()
+StudentRepository -> Database : SELECT studentId
+
+BookTransactionService -> TransactionRepository : addTransaction()
+TransactionRepository -> Database : INSERT transaction
+
+BookTransactionService -> BookRepository : updateBookAvailability(false)
+BookRepository -> Database : UPDATE books
+
+
+' =====================================================
+' ADMIN - RETURN BOOK
+' =====================================================
+
+User -> AdminMenu : Return Book
+AdminMenu -> BookTransactionService : returnBook(transactionId)
+
+BookTransactionService -> TransactionRepository : markAsReturned()
+TransactionRepository -> Database : UPDATE transaction
+
+BookTransactionService -> TransactionRepository : getBookIdByTransaction()
+TransactionRepository -> Database : SELECT bookId
+
+BookTransactionService -> BookRepository : updateBookAvailability(true)
+BookRepository -> Database : UPDATE books
+
+
+' =====================================================
+' STUDENT - SEARCH BOOKS
+' =====================================================
+
+User -> StudentMenu : View Books
+StudentMenu -> LibraryService : searchBooks(term,category)
+LibraryService -> BookRepository : searchWithCategory()
+BookRepository -> Database : SELECT books
+BookRepository --> LibraryService : QSqlQueryModel
+LibraryService --> StudentMenu : results
+
+
+' =====================================================
+' ADMIN - VIEW STATISTICS
+' =====================================================
+
+User -> AdminMenu : View Statistics
+AdminMenu -> StatisticsRepository : getBooksCount()
+StatisticsRepository -> Database : SELECT COUNT(*)
+StatisticsRepository --> AdminMenu : result
+
+
+' =====================================================
+' LOGOUT
+' =====================================================
+
+User -> AdminMenu : Logout
+AdminMenu -> Database : closeConnection()
+
+@enduml
+
+' State diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+
+title State Diagram: Library Management System
+
+
+[*] --> ApplicationStarted
+
+ApplicationStarted : entry / openConnection()
+
+ApplicationStarted --> ConnectionError : connectionFailed
+ApplicationStarted --> MainScreen : connectionSuccessful
+
+
+ConnectionError : entry / showError()
+ConnectionError --> [*]
+
+
+state MainScreen {
+
+    [*] --> WaitingForChoice
+
+    WaitingForChoice --> LoginProcess : selectLogin
+    WaitingForChoice --> SignupProcess : selectSignup
+}
+
+
+state LoginProcess {
+
+    [*] --> EnterCredentials
+
+    EnterCredentials --> Authenticating : submit
+
+    Authenticating : do / AuthService.login()
+
+    Authenticating --> LoginFailed : invalidCredentials
+    Authenticating --> RoleResolved : validCredentials
+
+    LoginFailed --> EnterCredentials : retry
+}
+
+
+state SignupProcess {
+
+    [*] --> EnterRegistrationData
+    EnterRegistrationData --> Registering : submit
+    Registering : do / AuthService.registerExistingStudent()
+    Registering --> RoleResolved : success
+}
+
+
+RoleResolved --> AdminSession : role == Admin
+RoleResolved --> StudentSession : role == Student
+
+
+' =====================================================
+' ADMIN SESSION
+' =====================================================
+
+state AdminSession {
+
+    [*] --> Dashboard
+
+    Dashboard : entry / loadDashboardStats()
+
+    Dashboard --> ManageBooks : selectBooks
+    Dashboard --> ManageStudents : selectStudents
+    Dashboard --> IssueBook : selectIssue
+    Dashboard --> ReturnBook : selectReturn
+    Dashboard --> ViewStatistics : selectStatistics
+    Dashboard --> Logout : selectLogout
+
+
+    state ManageBooks {
+        [*] --> ViewingBooks
+        ViewingBooks --> AddingBook : addBook
+        AddingBook : do / LibraryService.addNewBook()
+        AddingBook --> ViewingBooks
+    }
+
+    state ManageStudents {
+        [*] --> ViewingStudents
+        ViewingStudents --> EditingStudent : editStudent
+        EditingStudent : do / StudentRepository.updateStudent()
+        EditingStudent --> ViewingStudents
+    }
+
+    state IssueBook {
+        [*] --> SelectingData
+        SelectingData --> ProcessingIssue : confirm
+        ProcessingIssue : do / BookTransactionService.issueBook()
+        ProcessingIssue --> Dashboard
+    }
+
+    state ReturnBook {
+        [*] --> SelectingTransaction
+        SelectingTransaction --> ProcessingReturn : confirm
+        ProcessingReturn : do / BookTransactionService.returnBook()
+        ProcessingReturn --> Dashboard
+    }
+
+    state ViewStatistics {
+        [*] --> LoadingStats
+        LoadingStats : do / StatisticsRepository.getCounts()
+        LoadingStats --> Dashboard
+    }
+
+    Logout --> [*]
+}
+
+
+' =====================================================
+' STUDENT SESSION
+' =====================================================
+
+state StudentSession {
+
+    [*] --> StudentDashboard
+
+    StudentDashboard --> ViewBooks : selectViewBooks
+    StudentDashboard --> Logout : selectLogout
+
+    state ViewBooks {
+        [*] --> Searching
+        Searching : do / LibraryService.searchBooks()
+        Searching --> StudentDashboard
+    }
+
+    Logout --> [*]
+}
+
+
+AdminSession --> MainScreen : logout
+StudentSession --> MainScreen : logout
+
+MainScreen --> [*] : exitApplication
+
+@enduml
+
+' Timing diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Timing Diagram: Library Management System
+
+
+' =====================================================
+' DEFINE TIMING PARTICIPANTS
+' =====================================================
+
+robust "User" as U
+concise "MainWindow" as MW
+concise "AuthService" as AS
+concise "BookTransactionService" as BTS
+concise "Database" as DB
+concise "Book" as B
+concise "Session" as S
+
+
+' =====================================================
+' INITIAL STATES
+' =====================================================
+
+@0
+U is Idle
+MW is NotStarted
+AS is Idle
+BTS is Idle
+DB is Disconnected
+B is Available
+S is LoggedOut
+
+
+' =====================================================
+' APPLICATION START
+' =====================================================
+
+@1
+U -> MW : Start Application
+MW is Starting
+DB is Connecting
+
+@2
+DB is Connected
+MW is WaitingForLogin
+
+
+' =====================================================
+' LOGIN PROCESS
+' =====================================================
+
+@3
+U -> MW : Enter Credentials
+MW is Authenticating
+AS is Validating
+
+@4
+AS -> DB : Check User
+DB is Querying
+
+@5
+DB is Connected
+AS is RoleResolved
+MW is LoggedIn
+S is Active
+
+
+' =====================================================
+' ISSUE BOOK
+' =====================================================
+
+@6
+U -> MW : Issue Book
+MW is ProcessingIssue
+BTS is Issuing
+
+@7
+BTS -> DB : Insert Transaction
+DB is Updating
+
+@8
+B is Issued
+BTS is Idle
+MW is AdminDashboard
+
+
+' =====================================================
+' RETURN BOOK
+' =====================================================
+
+@9
+U -> MW : Return Book
+MW is ProcessingReturn
+BTS is Returning
+
+@10
+BTS -> DB : Update Transaction
+DB is Updating
+
+@11
+B is Available
+MW is AdminDashboard
+BTS is Idle
+
+
+' =====================================================
+' LOGOUT
+' =====================================================
+
+@12
+U -> MW : Logout
+S is LoggedOut
+MW is Closing
+DB is Disconnecting
+
+@13
+DB is Disconnected
+MW is NotStarted
+U is Idle
+
+@enduml
+
+' Use case diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Use Case Diagram: Library Management System
+
+left to right direction
+
+' =====================================================
+' ACTORS
+' =====================================================
+
+actor User
+actor Admin
+actor Student
+
+User <|-- Admin
+User <|-- Student
+
+' =====================================================
+' SYSTEM BOUNDARY
+' =====================================================
+
+rectangle "Library Management System" {
+
+    ' Authentication
+    usecase "Login" as UC_Login
+    usecase "Register" as UC_Register
+    usecase "Validate Credentials" as UC_Validate
+    usecase "Logout" as UC_Logout
+
+    ' Admin Functionalities
+    usecase "View Dashboard" as UC_Dashboard
+    usecase "View Statistics" as UC_Statistics
+    usecase "Manage Books" as UC_ManageBooks
+    usecase "Add Book" as UC_AddBook
+    usecase "Edit Book" as UC_EditBook
+    usecase "Delete Book" as UC_DeleteBook
+    usecase "Issue Book" as UC_Issue
+    usecase "Return Book" as UC_Return
+    usecase "Manage Students" as UC_ManageStudents
+    usecase "Edit Student Information" as UC_EditStudent
+
+    ' Student Functionalities
+    usecase "View Available Books" as UC_ViewBooks
+    usecase "Search Books" as UC_SearchBooks
+    usecase "Filter Books" as UC_FilterBooks
+}
+
+' =====================================================
+' ACTOR RELATIONS
+' =====================================================
+
+User --> UC_Login
+User --> UC_Register
+User --> UC_Logout
+
+Admin --> UC_Dashboard
+Admin --> UC_Statistics
+Admin --> UC_ManageBooks
+Admin --> UC_Issue
+Admin --> UC_Return
+Admin --> UC_ManageStudents
+
+Student --> UC_ViewBooks
+Student --> UC_SearchBooks
+
+' =====================================================
+' INCLUDE RELATIONS
+' =====================================================
+
+UC_Login --> UC_Validate : <<include>>
+UC_SearchBooks --> UC_FilterBooks : <<include>>
+
+UC_ManageBooks --> UC_AddBook : <<include>>
+UC_ManageBooks --> UC_EditBook : <<include>>
+UC_ManageBooks --> UC_DeleteBook : <<include>>
+
+UC_ManageStudents --> UC_EditStudent : <<include>>
+
+UC_Issue --> UC_ViewBooks : <<include>>
+UC_Return --> UC_ViewBooks : <<include>>
+
+' =====================================================
+' EXTEND RELATIONS
+' =====================================================
+
+UC_Statistics ..> UC_Dashboard : <<extend>>
+UC_SearchBooks ..> UC_ViewBooks : <<extend>>
+
+@enduml
+
+' Interaction overview diagram
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam conditionStyle diamond
+
+title Interaction Overview Diagram: Library Management System
+
+start
+
+:System initialization;
+
+group **sd: System Login**
+    :LoginWindow is displayed;
+    :AuthService verifies credentials;
+end group
+
+if (Successful authorization?) then (yes)
+    if (User role?) then (Administrator)
+        partition "Admin Panel (AdminMenu)" {
+            repeat
+                :Select operation;
+                if (Operation?) then (Manage books)
+                    group **sd: Book Interaction**
+                        :LibraryService::searchBooks();
+                        :BaseBookView updates table;
+                    end group
+                elseif (Issue book)
+                    group **sd: Issue Transaction**
+                        :BookTransactionService::issueBook();
+                        :Update statuses in database;
+                    end group
+                else (Edit students)
+                    :EditStudentInformation;
+                endif
+            repeat while (Continue?) is (yes)
+        }
+    else (Student)
+        partition "Student Portal (StudentMenu)" {
+            group **sd: Search and View**
+                :ViewBooksStudent;
+                :LibraryService::buildFilterString();
+            end group
+        }
+    endif
+else (no)
+    :Show error message;
+    stop
+endif
+
+group **sd: System Shutdown**
+    :LogoutDialog;
+    :Database::closeConnection();
+end group
+
+stop
+@enduml
+
+

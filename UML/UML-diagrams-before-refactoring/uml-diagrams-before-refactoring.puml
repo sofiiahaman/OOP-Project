@@ -1,0 +1,928 @@
+' Class diagram
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam packageStyle rectangle
+
+package "Core & Database" {
+    class Database {
+        - {static} QString testDbPath
+        - QSqlDatabase db
+        + Database()
+        + virtual ~Database()
+        + virtual bool openConnection()
+        + virtual void closeConnection()
+        + virtual bool checkLogin(QString, QString)
+        + virtual QString getUserRole(QString)
+        + {static} void setTestDatabase(QString)
+        + int getBooksCount()
+        + int getStudentsCount()
+        + int getAvailableBooksCount()
+        + virtual bool userExists(QString)
+        + bool addUser(QString, QString, QString)
+        + virtual int findStudentByEmail(QString)
+        + virtual bool linkStudentWithUser(int, int)
+    }
+}
+
+package "Main Windows" {
+    class MainWindow {
+        - Ui::MainWindow *ui
+        - Database db
+        + MainWindow(QWidget*)
+        - on_loginOptionButton_clicked()
+        - on_signupOptionButton_clicked()
+        - onUserLoggedIn(QString role)
+    }
+
+    class AdminMenu {
+        - Ui::AdminMenu *ui
+        - Database db
+        + AdminMenu(QWidget*)
+        + void loadDashboardStats()
+        - on_actionAdd_new_book_triggered()
+        - on_actionView_books_triggered()
+        - on_actionLogout_triggered()
+    }
+
+    class StudentMenu {
+        - Ui::StudentMenu *ui
+        + StudentMenu(QWidget*)
+        - on_actionLogout_triggered()
+        - on_actionView_books_triggered()
+        # paintEvent(QPaintEvent*)
+    }
+}
+
+package "Auth System" {
+    class LoginWindow {
+        - Ui::LoginWindow *ui
+        - Database *db
+        + void setDatabase(Database*)
+        + loginSuccessful(QString role) <<signal>>
+        - on_loginButton_clicked()
+        - on_goBackButton_clicked()
+    }
+
+    class SignupWindow {
+        - Ui::SignupWindow *ui
+        - Database db
+        + signupSuccessful(QString role) <<signal>>
+        - on_signupButton_clicked()
+    }
+
+    class LogoutDialog {
+        - QPropertyAnimation *fadeAnimation
+        + LogoutDialog(QWidget*)
+    }
+}
+
+package "Book Management" {
+    class AddBooks {
+        - Ui::AddBooks *ui
+        + getBookNameLineEdit() : QLineEdit*
+        + getSaveButton() : QPushButton*
+        - on_saveButton_clicked()
+        - loadCategoryHints()
+    }
+
+    class IssueBooks {
+        - Ui::IssueBooks *ui
+        - QMap<QString, QString> studentEmails
+        - QMap<QString, int> bookIds
+        - loadStudentHints()
+        - loadBookHints()
+        - on_issueBookButton_clicked()
+    }
+
+    class ReturnBooks {
+        - Ui::ReturnBooks *ui
+        - QTimer *searchTimer
+        - loadTransactionsByStudent(QString)
+        - onReturnClicked()
+    }
+
+    class ViewBooks {
+        - Ui::ViewBooks *ui
+        - QSqlTableModel *model
+        - loadBooks()
+    }
+
+    class ViewBooksStudent {
+        - Ui::ViewBooksStudent *ui
+        - QSqlTableModel *model
+    }
+}
+
+package "Student Management" {
+    class AddStudents {
+        - Ui::AddStudents *ui
+        - on_saveButton_2_clicked()
+    }
+
+    class EditStudentInformation {
+        - Ui::EditStudentInformation *ui
+        - int currentStudentId
+        + onStudentSelected(QModelIndex)
+        - saveChanges()
+    }
+
+    class ViewStudentInformation {
+        - Ui::ViewStudentInformation *ui
+        - QSqlTableModel *model
+        - loadStudentData()
+    }
+}
+
+' Зв'язки (Inheritance)
+MainWindow -up-|> QMainWindow
+AdminMenu -up-|> QMainWindow
+StudentMenu -up-|> QMainWindow
+
+LoginWindow -up-|> QDialog
+SignupWindow -up-|> QDialog
+LogoutDialog -up-|> QDialog
+AddBooks -up-|> QDialog
+AddStudents -up-|> QDialog
+IssueBooks -up-|> QDialog
+ReturnBooks -up-|> QDialog
+ViewBooks -up-|> QDialog
+ViewBooksStudent -up-|> QDialog
+ViewStudentInformation -up-|> QDialog
+
+' Зв'язки (Composition/Aggregation)
+MainWindow *-- Database
+AdminMenu *-- Database
+SignupWindow *-- Database
+LoginWindow o-- Database
+
+' Зв'язки (Usage/Dependencies)
+MainWindow ..> LoginWindow : creates
+MainWindow ..> AdminMenu : opens
+MainWindow ..> StudentMenu : opens
+AdminMenu ..> AddBooks : opens
+AdminMenu ..> IssueBooks : opens
+AdminMenu ..> ReturnBooks : opens
+AdminMenu ..> ViewStudentInformation : opens
+StudentMenu ..> ViewBooksStudent : opens
+
+@endum
+
+
+' Use case diagram
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Guest / Unregistered" as Guest
+actor "Student" as Student
+actor "Admin" as Admin
+
+rectangle "Library Management System" {
+    
+    package "Authentication" {
+        usecase "Sign Up" as UC_Signup
+        usecase "Log In" as UC_Login
+        usecase "Log Out" as UC_Logout
+    }
+
+    package "Student Operations" {
+        usecase "View Available Books" as UC_ViewBooksStudent
+    }
+
+    package "Admin Operations" {
+        usecase "Manage Books (Add/Edit)" as UC_ManageBooks
+        usecase "View All Books" as UC_ViewBooksAdmin
+        usecase "Add Student Manually" as UC_AddStudent
+        usecase "Edit Student Information" as UC_EditStudent
+        usecase "Issue Book" as UC_IssueBook
+        usecase "Return Book" as UC_ReturnBook
+        usecase "View Issue History" as UC_History
+        usecase "View Dashboard Statistics" as UC_Stats
+    }
+
+    ' Relationships for Guest
+    Guest --> UC_Signup
+    Guest --> UC_Login
+
+    ' Relationships for Student (Inherits Guest capabilities)
+    Student --|> Guest
+    Student --> UC_ViewBooksStudent
+    Student --> UC_Logout
+
+    ' Relationships for Admin (Inherits Guest capabilities)
+    Admin --|> Guest
+    Admin --> UC_ManageBooks
+    Admin --> UC_ViewBooksAdmin
+    Admin --> UC_AddStudent
+    Admin --> UC_EditStudent
+    Admin --> UC_IssueBook
+    Admin --> UC_ReturnBook
+    Admin --> UC_History
+    Admin --> UC_Stats
+    Admin --> UC_Logout
+}
+
+@endum
+
+
+' Activity diagram
+@startuml
+title Library Management System - Activity Diagram
+
+start
+
+:Launch Application (MainWindow);
+
+if (Has Account?) then (yes)
+  :Open LoginWindow;
+  repeat
+    :Enter Username and Password;
+    :Database Validates Credentials;
+  backward:Show Error Message;
+  repeat while (Credentials Valid?) is (no)
+  :Emit loginSuccessful(role);
+else (no)
+  :Open SignupWindow;
+  :Enter Registration Details;
+  :Database: addUser();
+  :Emit signupSuccessful("student");
+endif
+
+if (Role?) then (Admin)
+  :Open AdminMenu;
+  fork
+    :View Dashboard Stats;
+  fork again
+    :Manage Books;
+    if (Action?) then (Add)
+      :Open AddBooks;
+      :Save to DB;
+    else (View/Search)
+      :Open ViewBooks;
+    endif
+  fork again
+    :Manage Students;
+    if (Action?) then (Add)
+      :Open AddStudents;
+    else (Edit)
+      :Open EditStudentInformation;
+    endif
+  fork again
+    :Transactions;
+    if (Action?) then (Issue Book)
+      :Open IssueBooks;
+      :Select Student & Book;
+      :Update DB;
+    else (Return Book)
+      :Open ReturnBooks;
+    endif
+  end fork
+else (Student)
+  :Open StudentMenu;
+  fork
+    :View Personal Dashboard;
+  fork again
+    :Open ViewBooksStudent;
+    :Search/Filter Books;
+  end fork
+endif
+
+:User Triggers Logout;
+:Open LogoutDialog (Animation);
+:Return to MainWindow;
+
+stop
+@endum
+
+' Sequence diagram
+@startuml
+
+actor User
+
+participant MainWindow
+participant LoginWindow
+participant SignupWindow
+participant Database
+participant AdminMenu
+participant StudentMenu
+participant IssueBooks
+participant ReturnBooks
+participant ViewBooks
+
+== Application Start ==
+
+User -> MainWindow : Start application
+
+alt User chooses Login
+    User -> MainWindow : Click "Login"
+    MainWindow -> LoginWindow : open()
+
+    User -> LoginWindow : enter credentials
+    LoginWindow -> Database : checkLogin(username, password)
+
+    alt Valid credentials
+        LoginWindow -> Database : getUserRole(username)
+
+        alt role == admin
+            LoginWindow -> AdminMenu : open()
+
+            == Admin Dashboard ==
+
+            alt Issue Book
+                AdminMenu -> IssueBooks : open()
+                User -> IssueBooks : enter student & book
+                IssueBooks -> Database : validate student
+                IssueBooks -> Database : validate book
+                IssueBooks -> Database : insert issue record
+                IssueBooks -> Database : update book status
+                IssueBooks --> User : show success
+            end
+
+            alt Return Book
+                AdminMenu -> ReturnBooks : open()
+                User -> ReturnBooks : search student
+                ReturnBooks -> Database : loadTransactionsByStudent()
+                User -> ReturnBooks : select transaction
+                ReturnBooks -> Database : update return_date
+                ReturnBooks -> Database : update book status
+                ReturnBooks --> User : show confirmation
+            end
+
+            alt View Books
+                AdminMenu -> ViewBooks : open()
+                ViewBooks -> Database : loadBooks()
+                ViewBooks --> User : display books
+            end
+
+        else role == student
+            LoginWindow -> StudentMenu : open()
+
+            == Student Dashboard ==
+
+            StudentMenu -> ViewBooks : open()
+            ViewBooks -> Database : loadBooks()
+            ViewBooks --> User : display books
+        end
+
+    else Invalid credentials
+        LoginWindow --> User : show error
+    end
+
+else User chooses Signup
+    User -> MainWindow : Click "Signup"
+    MainWindow -> SignupWindow : open()
+
+    User -> SignupWindow : enter data
+    SignupWindow -> Database : addUser()
+    SignupWindow --> User : signupSuccessful(student)
+end
+
+== Logout ==
+
+User -> AdminMenu : click Logout
+AdminMenu -> MainWindow : return to main screen
+
+@enduml
+
+' Deployment diagram
+@startuml
+title Library Management System - Deployment Diagram
+
+skinparam node {
+    BackgroundColor White
+    BorderColor Black
+}
+
+node "User's Workstation" as PC <<Device>> {
+    node "Operating System (Windows/Linux/macOS)" as OS {
+        
+        package "Executable Environment" {
+            artifact "LibraryManagementSystem.exe" as App <<Artifact>>
+            
+            package "Qt Framework Libraries" <<Shared Library>> {
+                component "Qt6Core.dll"
+                component "Qt6Widgets.dll"
+                component "Qt6Sql.dll"
+            }
+        }
+        
+        package "Database Storage" {
+            file "library_db.sqlite" as DB_File <<Database>>
+        }
+    }
+}
+
+' Relationships
+App ..> [Qt6Core.dll] : dynamic link
+App ..> [Qt6Widgets.dll] : dynamic link
+App ..> [Qt6Sql.dll] : dynamic link
+
+App -- DB_File : "SQL Queries (CRUD)" via QSqlDatabase
+
+note right of DB_File
+  Local SQLite file 
+  referenced in Database.h
+end note
+
+note bottom of App
+  Compiled from classes:
+  MainWindow, AdminMenu, 
+  StudentMenu, etc.
+end note
+
+@endum
+
+
+' Component diagram
+@startuml
+
+package "Application Core" {
+    [MainWindow]
+}
+
+package "Authentication Component" {
+    [LoginWindow]
+    [SignupWindow]
+    [LogoutDialog]
+}
+
+package "Admin Module" {
+    [AdminMenu]
+    [AddBooks]
+    [AddStudents]
+    [EditStudentInformation]
+    [ViewBooks]
+    [ViewStudentInformation]
+    [IssueBooks]
+    [ReturnBooks]
+    [IssueHistory]
+}
+
+package "Student Module" {
+    [StudentMenu]
+    [ViewBooksStudent]
+}
+
+package "Data Access Layer" {
+    [Database]
+}
+
+database "Library Database" as DB
+
+' ==== Dependencies ====
+
+MainWindow --> LoginWindow
+MainWindow --> SignupWindow
+
+LoginWindow --> Database
+SignupWindow --> Database
+
+LoginWindow --> AdminMenu
+LoginWindow --> StudentMenu
+
+AdminMenu --> AddBooks
+AdminMenu --> AddStudents
+AdminMenu --> EditStudentInformation
+AdminMenu --> ViewBooks
+AdminMenu --> ViewStudentInformation
+AdminMenu --> IssueBooks
+AdminMenu --> ReturnBooks
+AdminMenu --> IssueHistory
+
+StudentMenu --> ViewBooksStudent
+
+AdminMenu --> Database
+StudentMenu --> Database
+IssueBooks --> Database
+ReturnBooks --> Database
+ViewBooks --> Database
+ViewBooksStudent --> Database
+
+Database --> DB
+
+@enduml
+
+
+' Object diagram
+@startuml
+title Library Management System - Object Diagram (Runtime Snapshot)
+
+object "appDatabase : Database" as db {
+    testDbPath = ""
+    dbName = "library_db.sqlite"
+    isOpen = true
+}
+
+object "mainApp : MainWindow" as main {
+    ui = <pointer>
+}
+
+object "activeAdminMenu : AdminMenu" as adminMenu {
+    ui = <pointer>
+    db = <reference to appDatabase>
+}
+
+object "loginSession : LoginWindow" as login {
+    ui = <pointer>
+    db = <pointer to appDatabase>
+    currentUser = "admin_sir"
+    role = "admin"
+}
+
+object "currentIssueTask : IssueBooks" as issueBooks {
+    ui = <pointer>
+    studentEmails = {"ivanov@mail.com", "petrov@mail.com"}
+    bookIds = {"C++ Primer": 101, "Qt Guide": 102}
+}
+
+object "book101 : Book" as b1 {
+    id = 101
+    title = "C++ Primer"
+    author = "Lippman"
+    status = "Available"
+}
+
+object "studentUser : Student" as s1 {
+    id = 55
+    name = "Ivan Ivanov"
+    email = "ivanov@mail.com"
+}
+
+' Relationships between instances
+main o-- db : holds
+adminMenu o-- db : uses
+issueBooks o-- db : queries
+login ..> db : validated against
+
+issueBooks ..> b1 : "selecting for issue"
+issueBooks ..> s1 : "assigning to"
+
+note right of adminMenu
+  This snapshot represents 
+  an active Admin session.
+end note
+
+note bottom of issueBooks
+  QMap collections are 
+  populated with real data 
+  from the database.
+end note
+
+@endum
+
+
+' State diagram
+@startuml
+title Library Management System - State Machine Diagram
+
+[*] --> ApplicationClosed
+
+state ApplicationClosed {
+}
+
+ApplicationClosed --> Initializing : Launch App
+Initializing --> MainWindowState : openConnection() success
+
+state MainWindowState {
+    [*] --> Idle
+    Idle --> Authenticating : click Login/Signup
+}
+
+state Authenticating {
+    [*] --> LoginScreen
+    LoginScreen --> Verifying : submit credentials
+    Verifying --> LoginScreen : [Invalid] / show error
+    Verifying --> Authorized : [Valid]
+    
+    [*] --> SignupScreen
+    SignupScreen --> CreatingUser : submit details
+    CreatingUser --> Authorized : success (role=student)
+}
+
+state Authorized {
+    state "AdminSession" as Admin {
+        [*] --> AdminDashboard
+        AdminDashboard --> ManagingBooks : select Manage
+        AdminDashboard --> ManagingStudents : select Manage
+        AdminDashboard --> IssuingProcess : select Issue
+    }
+    
+    state "StudentSession" as Student {
+        [*] --> StudentDashboard
+        StudentDashboard --> BrowsingCatalog : select View Books
+    }
+}
+
+Authorized --> LogoutDialogState : trigger Logout
+LogoutDialogState --> MainWindowState : animation finish
+
+state IssuingProcess {
+    [*] --> SelectingDetails
+    SelectingDetails --> BookStateUpdate : click Issue
+}
+
+' Book Lifecycle within the system
+state "Book Status in Database" as BookLife {
+    state Available
+    state Issued
+    state Reserved
+    
+    Available -right-> Issued : IssueBooks Action
+    Issued -left-> Available : ReturnBooks Action
+}
+
+MainWindowState --> ApplicationClosed : Close Window
+Admin --> ApplicationClosed : Force Close
+Student --> ApplicationClosed : Force Close
+
+@endum
+
+
+' Package diagram
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam monochrome true
+
+title Library Management System - Package Diagram
+
+package "UI Layer (Views)" {
+
+    package "Auth & Main" {
+        class MainWindow
+        class LoginWindow
+        class SignupWindow
+        class LogoutDialog
+    }
+
+    package "Admin Modules" {
+        class AdminMenu
+        class AddBooks
+        class ViewBooks
+        class AddStudents
+        class ViewStudentInformation
+        class EditStudentInformation
+        class IssueBooks
+        class ReturnBooks
+    }
+
+    package "Student Modules" {
+        class StudentMenu
+        class ViewBooksStudent
+    }
+}
+
+package "Data Access Layer" {
+    class Database
+}
+
+package "Qt Framework (External)" {
+    class QMainWindow
+    class QDialog
+    class QSqlDatabase
+}
+
+'--- Relationships & Dependencies ---
+
+' Inheritance
+QMainWindow <|-- MainWindow
+QMainWindow <|-- AdminMenu
+QMainWindow <|-- StudentMenu
+
+QDialog <|-- LoginWindow
+QDialog <|-- SignupWindow
+QDialog <|-- AddBooks
+QDialog <|-- AddStudents
+QDialog <|-- ViewBooks
+QDialog <|-- ViewBooksStudent
+QDialog <|-- IssueBooks
+QDialog <|-- ReturnBooks
+QDialog <|-- EditStudentInformation
+QDialog <|-- LogoutDialog
+
+' Business Logic Dependencies
+MainWindow ..> LoginWindow : opens
+MainWindow ..> SignupWindow : opens
+LoginWindow ..> AdminMenu : triggers (admin role)
+LoginWindow ..> StudentMenu : triggers (student role)
+
+AdminMenu ..> "Admin Modules" : manages
+StudentMenu ..> ViewBooksStudent : opens
+
+' Database Connections
+"UI Layer (Views)" ..> Database : uses for CRUD operations
+Database ..> QSqlDatabase : wraps
+
+@enduml
+
+
+' Composite structure diagram
+@startuml
+title Library Management System - Composite Structure Diagram
+
+skinparam monochrome true
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+package "System Architecture" {
+
+    component "AdminMenu : QMainWindow" <<component>> {
+        port "UI Signals" as P1
+        port "DB Access" as P2
+        
+        [ui : Ui::AdminMenu] <<part>>
+        [db : Database] <<part>>
+        
+        P1 - [ui]
+        [ui] ..> [db] : "invokes stats/methods"
+        [db] - P2
+    }
+
+    component "LoginWindow : QDialog" <<component>> {
+        port "User Input" as LP1
+        port "Auth Provider" as LP2
+        
+        [ui : Ui::LoginWindow] <<part>>
+        [db_ptr : Database*] <<reference>>
+        
+        LP1 - [ui]
+        [ui] --> [db_ptr] : "validates credentials"
+        [db_ptr] - LP2
+    }
+
+    component "Database" <<component>> {
+        port "SQL Interface" as DB_P
+        [internal_db : QSqlDatabase] <<part>>
+        [queries : QSqlQuery] <<part>>
+        
+        DB_P - [internal_db]
+        [internal_db] -- [queries]
+    }
+    
+    component "AddBooks : QDialog" <<component>> {
+        port "Form Data" as ABP1
+        [ui : Ui::AddBooks] <<part>>
+        [validator : QLineEdit] <<part>>
+        
+        ABP1 - [ui]
+        [ui] ..> [validator] : "validates input"
+    }
+}
+
+'--- External Connectors ---
+
+[AdminMenu] --( P2 : "uses"
+P2 )-- [Database] : "provides"
+
+[LoginWindow] --( LP2 : "uses"
+LP2 )-- [Database] : "provides"
+
+note right of [AdminMenu]
+  Internal structure shows that 
+  AdminMenu owns its Database instance.
+end note
+
+note bottom of [LoginWindow]
+  LoginWindow uses a pointer (reference) 
+  to a Database instance managed elsewhere.
+end note
+
+@enduml
+
+' Communication diagram
+@startuml
+title Library Management System - Communication Diagram (Login Process)
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam state {
+  BackgroundColor White
+  BorderColor Black
+}
+
+' Objects involved in the communication
+node "main : MainWindow" as Main
+node "login : LoginWindow" as Login
+node "db : Database" as DB
+node "menu : AdminMenu" as Menu
+
+' Communication paths and messages
+Main -right-> Login : 1: create()
+Main <-right- Login : 2: loginSuccessful(role)
+
+Login -down-> DB : 1.1: checkLogin(user, pass)\n1.2: getUserRole(user)
+DB -up-> Login : 1.3: role/status
+
+Main -down-> Menu : 3: create(parent)
+Main -down-> Menu : 4: show()
+Menu -right-> DB : 4.1: loadDashboardStats()
+
+note top of Main
+  The MainWindow acts as the 
+  coordinator for the application 
+  lifecycle.
+end note
+
+@enduml
+
+
+' Interaction overview diagram
+@startuml
+title Library Management System - Interaction Overview Diagram
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam conditionStyle diamond
+
+|User|
+start
+
+:Start Application;
+note right: MainWindow Initialization
+
+partition "Interaction: Authentication" {
+    :Display Login/Signup Window;
+    if (User has account?) then (yes)
+        :sd Login Logic;
+        note left: Sequence: checkLogin(), getUserRole()
+    else (no)
+        :sd Signup Logic;
+        note left: Sequence: addUser()
+    endif
+}
+
+if (Auth Successful?) then (yes)
+    if (Role == "Admin") then
+        partition "Interaction: Admin Workflow" {
+            :Show AdminMenu;
+            fork
+                :sd Manage Books;
+                note right: Add/View/Edit Books
+            fork again
+                :sd Manage Students;
+            fork again
+                :sd Circulation;
+                note right: Issue/Return Operations
+            end fork
+        }
+    else (Role == "Student")
+        partition "Interaction: Student Workflow" {
+            :Show StudentMenu;
+            :sd Browse Library;
+        }
+    endif
+else (no/cancel)
+    stop
+endif
+
+:Logout;
+stop
+
+@enduml
+
+
+' Timing diagram
+@startuml
+title Library Management System - Timing Diagram
+
+' Use concise mode for better compatibility
+concise "User" as USR
+concise "LoginWindow" as LW
+concise "Database" as DB
+concise "AdminMenu" as AM
+
+@0
+USR is Idle
+LW is Closed
+DB is Idle
+AM is Closed
+
+@10
+USR is Typing
+LW is Visible
+
+@20
+USR is Waiting
+LW is Processing
+DB is Searching
+
+@30
+DB is Idle
+LW is Validating
+
+@40
+LW is Closed
+AM is Loading
+USR is Authorized
+
+@50
+AM is Visible
+USR is Active
+
+@100
+AM is Closed
+USR is Idle
+@enduml
+
