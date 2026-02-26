@@ -1,17 +1,20 @@
 #include "returnbooks.h"
 #include "ui_returnbooks.h"
 #include "adminmenu.h"
-#include "database.h"
 
-#include <QSqlQuery>
-#include <QSqlQueryModel>
+#include "database.h"
+#include "repositories/StudentRepository.h"
+#include "repositories/TransactionRepository.h"
+
 #include <QMessageBox>
 #include <QCompleter>
-#include <QStringListModel>
+#include <QTimer>
+#include <QStringList>
+#include <QSqlQuery>
 
 ReturnBooks::ReturnBooks(QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::ReturnBooks)
+    : QDialog(parent),
+    ui(new Ui::ReturnBooks)
 {
     ui->setupUi(this);
 
@@ -19,7 +22,6 @@ ReturnBooks::ReturnBooks(QWidget *parent)
 
     setupAutocompleter();
 
-    // Timer setup for live search
     searchTimer = new QTimer(this);
     searchTimer->setSingleShot(true);
 
@@ -31,10 +33,14 @@ ReturnBooks::ReturnBooks(QWidget *parent)
         loadTransactionsByStudent(ui->studentNameLineEdit->text());
     });
 
-    connect(ui->tableView, &QTableView::clicked, this, &ReturnBooks::onTransactionSelected);
-    connect(ui->returnButton, &QPushButton::clicked, this, &ReturnBooks::onReturnClicked);
-    connect(ui->clearButton, &QPushButton::clicked, this, &ReturnBooks::clearFields);
+    connect(ui->tableView, &QTableView::clicked,
+            this, &ReturnBooks::onTransactionSelected);
 
+    connect(ui->returnButton, &QPushButton::clicked,
+            this, &ReturnBooks::onReturnClicked);
+
+    connect(ui->clearButton, &QPushButton::clicked,
+            this, &ReturnBooks::clearFields);
 }
 
 ReturnBooks::~ReturnBooks()
@@ -44,58 +50,56 @@ ReturnBooks::~ReturnBooks()
 
 void ReturnBooks::setupAutocompleter()
 {
-    Database db;
-    if (!db.openConnection()) return;
+    Database database;
+    StudentRepository repo(database);
 
-    QSqlQuery query("SELECT name FROM students");
-    QStringList studentNames;
-    while (query.next()) {
-        studentNames << query.value(0).toString();
+    QSqlQueryModel* model = repo.getAllStudents();
+    if (!model)
+        return;
+
+    QStringList names;
+
+    for (int i = 0; i < model->rowCount(); ++i) {
+        names << model->data(model->index(i, 1)).toString();
     }
 
-    QCompleter *completer = new QCompleter(studentNames, this);
+    QCompleter *completer = new QCompleter(names, this);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
     completer->setFilterMode(Qt::MatchContains);
+
     ui->studentNameLineEdit->setCompleter(completer);
 }
 
-/* ========================
- * Loading transactions
- * ======================== */
+
 void ReturnBooks::loadTransactionsByStudent(const QString &name)
 {
     QString trimmed = name.trimmed();
-    if(trimmed.length() < 2) {
+
+    if (trimmed.length() < 2) {
         ui->tableView->setModel(nullptr);
         return;
     }
 
-    Database db;
-    if (!db.openConnection()) return;
+    Database database;
+    StudentRepository studentRepo(database);
+    TransactionRepository transactionRepo(database);
 
-    QSqlQuery query;
-    query.prepare("SELECT id FROM students WHERE LOWER(name) LIKE LOWER(:name)");
-    query.bindValue(":name", "%" + trimmed + "%");
+    int studentId = studentRepo.findStudentByName(trimmed);
 
-    if(query.exec() && query.next()) {
-        int studentId = query.value(0).toInt();
-        QSqlQueryModel *model = new QSqlQueryModel(this);
-        model->setQuery(QString("SELECT id AS 'Issue ID', book_id AS 'Book ID', issue_date AS 'Date' "
-                                "FROM transactions WHERE student_id = %1 AND return_date IS NULL").arg(studentId));
-        ui->tableView->setModel(model);
-        ui->tableView->resizeColumnsToContents();
+    if (studentId == -1) {
+        ui->tableView->setModel(nullptr);
+        return;
     }
+
+    QSqlQueryModel* model = transactionRepo.getStudentBooks(studentId);
+
+    ui->tableView->setModel(model);
+    ui->tableView->resizeColumnsToContents();
 }
 
-
-
-/* ========================
- * Selecting a transaction
- * ======================== */
 void ReturnBooks::onTransactionSelected(const QModelIndex &index)
 {
-    if(!index.isValid())
-        return;
+    if (!index.isValid()) return;
 
     int row = index.row();
     auto model = ui->tableView->model();
@@ -103,18 +107,14 @@ void ReturnBooks::onTransactionSelected(const QModelIndex &index)
     int transactionId = model->index(row, 0).data().toInt();
     int bookId = model->index(row, 1).data().toInt();
 
-    Database db;
-    db.openConnection();
-    QSqlQuery query;
-    query.prepare("SELECT t.issue_date, s.name, s.email, b.title, b.author "
-                  "FROM transactions t JOIN students s ON t.student_id = s.id "
-                  "JOIN books b ON t.book_id = b.id WHERE t.id = :tid");
+    Database database;
+    TransactionRepository repo(database);
+    QSqlQuery query = repo.getTransactionDetails(transactionId);
 
-    query.bindValue(":tid", transactionId);
-
-    if(query.exec() && query.next()) {
+    if (query.next()) {
         ui->issueIDLineEdit->setText(QString::number(transactionId));
         ui->bookIDLineEdit->setText(QString::number(bookId));
+
         ui->studentNameLineEdit->setText(query.value("name").toString());
         ui->studentEmailLineEdit->setText(query.value("email").toString());
         ui->bookTitleLineEdit->setText(query.value("title").toString());
@@ -123,33 +123,38 @@ void ReturnBooks::onTransactionSelected(const QModelIndex &index)
     }
 }
 
-/* ========================
- * Returning a book
- * ======================== */
 void ReturnBooks::onReturnClicked()
 {
-    if(ui->issueIDLineEdit->text().isEmpty())
-    {
-        QMessageBox::warning(this, "Error", "Select a transaction to return.");
+    if (ui->issueIDLineEdit->text().isEmpty()) {
+        QMessageBox::warning(this,
+                             "Error",
+                             "Select a transaction to return.");
         return;
     }
 
-    int tId = ui->issueIDLineEdit->text().toInt();
-    int bId = ui->bookIDLineEdit->text().toInt();
+    int transactionId = ui->issueIDLineEdit->text().toInt();
 
-    Database db;
-    if(db.returnBookTransaction(tId, bId)) {
-        QMessageBox::information(this, "Success", "The book has been successfully returned!");
+    Database database;
+    TransactionRepository repo(database);
+
+    if (repo.returnBook(transactionId)) {
+
+        QMessageBox::information(this,
+                                 "Success",
+                                 "The book has been successfully returned!");
+
         clearFields();
-        loadTransactionsByStudent(ui->studentNameLineEdit->text());
-    } else {
-        QMessageBox::critical(this, "Error", "Failed to process the return.");
+
+        loadTransactionsByStudent(
+            ui->studentNameLineEdit->text());
+    }
+    else {
+        QMessageBox::critical(this,
+                              "Error",
+                              "Failed to process the return.");
     }
 }
 
-/* ========================
- * Clearing input fields
- * ======================== */
 void ReturnBooks::clearFields()
 {
     ui->issueIDLineEdit->clear();
@@ -167,5 +172,6 @@ void ReturnBooks::on_goBackButton_5_clicked()
 {
     AdminMenu *adminMenu = new AdminMenu();
     adminMenu->show();
+
     this->close();
 }

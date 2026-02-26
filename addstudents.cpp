@@ -1,6 +1,10 @@
 #include "addstudents.h"
 #include "ui_addstudents.h"
 #include "adminmenu.h"
+
+#include "./repositories/StudentRepository.h"
+#include "database.h"
+
 #include <QMessageBox>
 
 AddStudents::AddStudents(QWidget *parent)
@@ -8,7 +12,6 @@ AddStudents::AddStudents(QWidget *parent)
     , ui(new Ui::AddStudents)
 {
     ui->setupUi(this);
-
     ui->goBackButton_2->setIcon(QIcon(":/icons/icons/left-arrow.png"));
 }
 
@@ -19,10 +22,10 @@ AddStudents::~AddStudents()
 
 void AddStudents::on_goBackButton_2_clicked()
 {
-    #ifndef UNIT_TEST
+#ifndef UNIT_TEST
     AdminMenu *adminMenu = new AdminMenu();
     adminMenu->show();
-    #endif
+#endif
     this->close();
 }
 
@@ -36,26 +39,18 @@ void AddStudents::on_saveButton_2_clicked()
         return;
     }
 
-    Database db;
-    if (!db.openConnection()) {
-        QMessageBox::critical(this, "Error", "Failed to connect to the database.");
-        return;
-    }
+    Database database;
+    StudentRepository repo(database);
 
-    QSqlQuery query;
-    query.prepare("INSERT INTO students (name, email) VALUES (?, ?)");
-    query.addBindValue(name);
-    query.addBindValue(email);
+    bool success = repo.addStudent(name, email);
 
-    if (query.exec()) {
+    if (success) {
         QMessageBox::information(this, "Success", "Student added successfully!");
         ui->studentNameLineEdit_2->clear();
         ui->studentEmailLineEdit_2->clear();
     } else {
-        QMessageBox::critical(this, "Error", "Failed to add student: " + query.lastError().text());
+        QMessageBox::critical(this, "Error", "Failed to add student.");
     }
-
-    db.closeConnection();
 }
 
 void AddStudents::on_cancelButton_2_clicked()

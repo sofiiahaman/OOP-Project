@@ -1,9 +1,13 @@
 #include "addbooks.h"
 #include "ui_addbooks.h"
 #include "adminmenu.h"
+
+#include "./repositories/BookRepository.h"
+#include "database.h"
+
 #include <QMessageBox>
 #include <QCompleter>
-#include <QSqlQuery>
+#include <QSqlRecord>
 
 AddBooks::AddBooks(QWidget *parent)
     : QDialog(parent)
@@ -23,47 +27,60 @@ AddBooks::~AddBooks()
 
 void AddBooks::loadCategoryHints()
 {
-    Database db;
-    if (!db.openConnection()) return;
+    Database database;
+    BookRepository repo(database);
 
-    QSqlQuery query("SELECT DISTINCT category FROM books");
+    QSqlQueryModel* model = repo.getAllBooks();
+    if (!model)
+        return;
+
     QStringList categories;
 
-    while (query.next()) {
-        categories << query.value(0).toString();
+    for (int i = 0; i < model->rowCount(); ++i) {
+        QString category = model->record(i).value("category").toString();
+        if (!categories.contains(category))
+            categories << category;
     }
 
-    db.closeConnection();
+    delete model;
 
-    // Create a completer for category hints
     QCompleter *completer = new QCompleter(categories, this);
-    completer->setCaseSensitivity(Qt::CaseInsensitive);  // case insensitive
-    completer->setFilterMode(Qt::MatchContains);         // show suggestions containing text
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setFilterMode(Qt::MatchContains);
     completer->setCompletionMode(QCompleter::PopupCompletion);
+
     ui->bookCategoryLineEdit->setCompleter(completer);
 }
 
 void AddBooks::on_saveButton_clicked()
 {
-    // 1. Data validation (UI responsibility)
+    // UI validation
     QString title = ui->bookNameLineEdit->text().trimmed();
     QString author = ui->bookAuthorLineEdit->text().trimmed();
     QString publisher = ui->bookPublisherLineEdit->text().trimmed();
     QString category = ui->bookCategoryLineEdit->text().trimmed();
 
-    if (title.isEmpty() || author.isEmpty() || publisher.isEmpty() || category.isEmpty()) {
+    if (title.isEmpty() || author.isEmpty() ||
+        publisher.isEmpty() || category.isEmpty())
+    {
         QMessageBox::warning(this, "Error", "Please fill in all fields!");
         return;
     }
 
-    // 2. Call business logic through the Repository (Stage 1)
-    Database db;
-    if (db.addBook(title, author, publisher, category)) {
-        QMessageBox::information(this, "Success", "The book was successfully added!");
+    // Repository call
+    Database database;
+    BookRepository repo(database);
+
+    bool success = repo.addBook(title, author, publisher, category);
+
+    if (success) {
+        QMessageBox::information(this, "Success",
+                                 "The book was successfully added!");
         clearFields();
-        loadCategoryHints(); // Refresh the hints list
+        loadCategoryHints(); // refresh hints
     } else {
-        QMessageBox::critical(this, "Error", "Failed to add the book to the database.");
+        QMessageBox::critical(this, "Error",
+                              "Failed to add the book to the database.");
     }
 }
 
@@ -73,7 +90,6 @@ void AddBooks::on_goBackButton_clicked()
     adminMenu->show();
     this->close();
 }
-
 
 void AddBooks::on_cancelButton_clicked()
 {

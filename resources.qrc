@@ -6,4 +6,5 @@
         <file>icons/envelope.png</file>
         <file>icons/library.jpg</file>
     </qresource>
+    <qresource prefix="/"/>
 </RCC>

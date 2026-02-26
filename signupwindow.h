@@ -26,7 +26,6 @@ private slots:
 
 private:
     Ui::SignupWindow *ui;
-    Database db;
 };
 
 #endif // SIGNUPWINDOW_H

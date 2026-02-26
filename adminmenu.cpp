@@ -1,5 +1,6 @@
 #include "adminmenu.h"
 #include "ui_adminmenu.h"
+
 #include "addbooks.h"
 #include "viewbooks.h"
 #include "addstudents.h"
@@ -7,14 +8,17 @@
 #include "issuebooks.h"
 #include "returnbooks.h"
 #include "editstudentinformation.h"
-#include "database.h"
 #include "mainwindow.h"
 #include "logoutdialog.h"
+
+#include "./repositories/StatisticsRepository.h"
+#include "database.h"
+
 #include <QMessageBox>
 
 AdminMenu::AdminMenu(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::AdminMenu)
+    : QMainWindow(parent),
+    ui(new Ui::AdminMenu)
 {
     ui->setupUi(this);
 
@@ -29,58 +33,61 @@ AdminMenu::~AdminMenu()
 void AdminMenu::loadDashboardStats()
 {
     Database db;
-    if(db.openConnection()) {
 
-        ui->labelBooksCount->setText(QString::number(db.getBooksCount()));
-        ui->labelAuthorsCount->setText(QString::number(db.getAuthorsCount()));
-        ui->labelCategoriesCount->setText(QString::number(db.getCategoriesCount()));
-        ui->labelPublishersCount->setText(QString::number(db.getPublishersCount()));
-        ui->labelStudentCount->setText(QString::number(db.getStudentsCount()));
-        ui->labelBookAvailableCount->setText(QString::number(db.getAvailableBooksCount()));
-        ui->labelBookIssueCount->setText(QString::number(db.getIssuedBooksCount()));
-        ui->labelBookReturnedCount->setText(QString::number(db.getReturnedBooksCount()));
-        ui->labelBookNotReturnCount->setText(QString::number(db.getNotReturnBooksCount()));
+    if (!db.openConnection()) {
+        QMessageBox::critical(this, "Error", "Cannot connect to database!");
+        return;
     }
+
+    StatisticsRepository statsRepo(&db);
+
+    ui->labelBooksCount->setText(QString::number(statsRepo.getBooksCount()));
+    ui->labelAuthorsCount->setText(QString::number(statsRepo.getAuthorsCount()));
+    ui->labelCategoriesCount->setText(QString::number(statsRepo.getCategoriesCount()));
+    ui->labelPublishersCount->setText(QString::number(statsRepo.getPublishersCount()));
+    ui->labelStudentCount->setText(QString::number(statsRepo.getStudentsCount()));
+
+    ui->labelBookAvailableCount->setText(QString::number(statsRepo.getAvailableBooksCount()));
+    ui->labelBookIssueCount->setText(QString::number(statsRepo.getIssuedBooksCount()));
+    ui->labelBookReturnedCount->setText(QString::number(statsRepo.getReturnedBooksCount()));
+    ui->labelBookNotReturnCount->setText(QString::number(statsRepo.getNotReturnedBooksCount()));
 
     db.closeConnection();
 }
 
-
 void AdminMenu::on_actionAdd_new_book_triggered()
 {
-    AddBooks *addBookDialog = new AddBooks(); // create a new window
-    addBookDialog->show();                    // open it
-
-    this->close();                            // close AdminMenu
+    AddBooks *addBookDialog = new AddBooks();
+    addBookDialog->show();
+    this->close();
 }
 
 void AdminMenu::on_actionView_books_triggered()
 {
     ViewBooks *viewBooks = new ViewBooks();
-    viewBooks->show();  // open the window for viewing books
-
-    this->close();      // close adminmenu
+    viewBooks->show();
+    this->close();
 }
 
 void AdminMenu::on_actionAdd_student_triggered()
 {
     AddStudents *addStudents = new AddStudents();
-    addStudents->show();   // open a new window
-    this->close();         // close adminmenu
+    addStudents->show();
+    this->close();
 }
 
 void AdminMenu::on_actionView_student_information_triggered()
 {
     ViewStudentInformation *viewInfo = new ViewStudentInformation();
     viewInfo->show();
-    this->close();        // close adminmenu
+    this->close();
 }
 
 void AdminMenu::on_actionIssue_books_triggered()
 {
     IssueBooks *issueBooks = new IssueBooks();
     issueBooks->show();
-    this->close();     // close adminmenu
+    this->close();
 }
 
 void AdminMenu::on_actionReturn_books_triggered()

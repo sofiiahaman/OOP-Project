@@ -1,9 +1,13 @@
 #include "signupwindow.h"
 #include "ui_signupwindow.h"
-#include "studentmenu.h"
-#include "database.h"
+
 #include "mainwindow.h"
+#include "database.h"
+#include "./repositories/StudentRepository.h"
+#include "./repositories/UserRepository.h"
+
 #include <QMessageBox>
+#include <QPixmap>
 
 SignupWindow::SignupWindow(QWidget *parent)
     : QDialog(parent)
@@ -12,43 +16,43 @@ SignupWindow::SignupWindow(QWidget *parent)
     ui->setupUi(this);
 
     QPixmap pix1(":/icons/icons/user.png");
-    int w = ui->userIcon->width();
-    int h = ui->userIcon->height();
-    ui->userIcon->setPixmap(pix1.scaled(w,h, Qt::KeepAspectRatio));
+    ui->userIcon->setPixmap(
+        pix1.scaled(ui->userIcon->width(),
+                    ui->userIcon->height(),
+                    Qt::KeepAspectRatio));
 
     QPixmap pix4(":/icons/icons/envelope.png");
-    int w4 = ui->emailIcon->width();
-    int h4 = ui->emailIcon->height();
-    ui->emailIcon->setPixmap(pix4.scaled(w4,h4, Qt::KeepAspectRatio));
+    ui->emailIcon->setPixmap(
+        pix4.scaled(ui->emailIcon->width(),
+                    ui->emailIcon->height(),
+                    Qt::KeepAspectRatio));
 
     QPixmap pix2(":/icons/icons/password.png");
-    int w2 = ui->passwordIcon->width();
-    int h2 = ui->passwordIcon->height();
-    ui->passwordIcon->setPixmap(pix2.scaled(w2,h2, Qt::KeepAspectRatio));
+    ui->passwordIcon->setPixmap(
+        pix2.scaled(ui->passwordIcon->width(),
+                    ui->passwordIcon->height(),
+                    Qt::KeepAspectRatio));
 
     QPixmap pix3(":/icons/icons/password.png");
-    int w3 = ui->passwordIcon_2->width();
-    int h3 = ui->passwordIcon_2->height();
-    ui->passwordIcon_2->setPixmap(pix3.scaled(w3,h3, Qt::KeepAspectRatio));
+    ui->passwordIcon_2->setPixmap(
+        pix3.scaled(ui->passwordIcon_2->width(),
+                    ui->passwordIcon_2->height(),
+                    Qt::KeepAspectRatio));
 
     ui->goBackButton->setIcon(QIcon(":/icons/icons/left-arrow.png"));
-
-    if (!db.openConnection()) {
-        QMessageBox::critical(this, "Error", "Cannot connect to database!");
-    }
 }
 
-SignupWindow::~SignupWindow() {
-    db.closeConnection();
+SignupWindow::~SignupWindow()
+{
     delete ui;
 }
 
 void SignupWindow::on_signupButton_clicked()
 {
-    QString email = ui->emailEdit->text();
-    QString username = ui->usernameEdit->text();
-    QString password = ui->passwordEdit->text();
-    QString confirm = ui->confirmPasswordEdit->text();
+    QString email = ui->emailEdit->text().trimmed();
+    QString username = ui->usernameEdit->text().trimmed();
+    QString password = ui->passwordEdit->text().trimmed();
+    QString confirm = ui->confirmPasswordEdit->text().trimmed();
 
     if (email.isEmpty() || username.isEmpty() || password.isEmpty()) {
         QMessageBox::warning(this, "Error", "All fields must be filled!");
@@ -60,8 +64,12 @@ void SignupWindow::on_signupButton_clicked()
         return;
     }
 
-    // 1. Check if a student with this email exists
-    int studentId = db.findStudentByEmail(email);
+    Database database;
+    StudentRepository studentRepo(database);
+    UserRepository userRepo(database);
+
+    // Check student by email
+    int studentId = studentRepo.findStudentByEmail(email);
 
     if (studentId == -1) {
         QMessageBox::warning(this, "Error",
@@ -70,37 +78,38 @@ void SignupWindow::on_signupButton_clicked()
         return;
     }
 
-    // 2. Check if the user_id is already linked
-    if (db.studentHasUser(studentId)) {
+    // Check if already linked
+    if (studentRepo.studentHasUser(studentId)) {
         QMessageBox::warning(this, "Error",
                              "This student already has an account!");
         return;
     }
 
-   // 3. Check if the username is taken
-    if (db.userExists(username)) {
+    // Check username uniqueness
+    if (userRepo.userExists(username)) {
         QMessageBox::warning(this, "Error", "User already exists!");
         return;
     }
 
-    QString role = "student";
-
-    // 4. Add user (users)
-    int newUserId = db.addUserReturnId(username, password, role);
+    // Create user
+    int newUserId = userRepo.addUserReturnId(username, password, "student");
 
     if (newUserId == -1) {
         QMessageBox::critical(this, "Error", "Failed to create account!");
         return;
     }
 
-    // 5. Write user_id into students
-    if (!db.linkStudentWithUser(studentId, newUserId)) {
-        QMessageBox::critical(this, "Error", "Failed to link student to account!");
+    // Link student with user
+    if (!userRepo.linkStudentWithUser(studentId, newUserId)) {
+        QMessageBox::critical(this, "Error",
+                              "Failed to link student to account!");
         return;
     }
 
-    QMessageBox::information(this, "Success", "Account created successfully!");
-    emit signupSuccessful(role);
+    QMessageBox::information(this, "Success",
+                             "Account created successfully!");
+
+    emit signupSuccessful("student");
 
     this->close();
 }

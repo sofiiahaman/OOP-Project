@@ -16,12 +16,14 @@ public:
     explicit EditStudentInformation(QWidget *parent = nullptr);
     ~EditStudentInformation();
 
+     void onStudentSelected(const QModelIndex &index);
+
 private slots:
     // Load students into the table
     void loadStudents(const QString &name);
 
     // Select a student from the table
-    void onStudentSelected(const QModelIndex &index);
+    // void onStudentSelected(const QModelIndex &index);
 
     // Save updates
     void saveChanges();
